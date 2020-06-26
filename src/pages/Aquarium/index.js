@@ -9,6 +9,7 @@ import {
   ScrollView,
   StatusBar,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -26,8 +27,6 @@ const Remember = () => {
   async function deleteAquarium(id) {
     const realm = await getRealm();
     try {
-      console.log(id);
-
       const deletingAquarium = realm
         .objects('Aquarium')
         .filtered(`id = '${id}'`);
@@ -36,7 +35,13 @@ const Remember = () => {
         realm.delete(deletingAquarium);
       });
     } catch (error) {
-      console.log(error);
+      ToastAndroid.showWithGravityAndOffset(
+        'Ocorreu um erro ao excluir!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
     }
   }
 
@@ -59,24 +64,34 @@ const Remember = () => {
     );
   }
 
+  async function setAquariumsRealm() {
+    const realm = await getRealm();
+    const data = realm.objects('Aquarium').sorted('name', false);
+    setAquariums(data);
+  }
+
   useEffect(() => {
-    async function loadAquariums() {
+    async function startListenerRefreshAquarium() {
       const realm = await getRealm();
-      const data = realm.objects('Aquarium').sorted('name', false);
-      data.addListener(aquarium => {
-        setAquariums(aquarium);
-      });
+      realm.addListener('change', () => setAquariumsRealm());
+    }
+    async function removeListenerRefreshAquarium() {
+      const realm = await getRealm();
+      realm.removeListener('change', () => setAquariumsRealm());
     }
 
-    loadAquariums();
+    startListenerRefreshAquarium();
+    return () => {
+      removeListenerRefreshAquarium();
+    };
   }, []);
 
   function handleNavigateBack() {
     navigation.goBack();
   }
 
-  function handleNavigateToShow() {
-    navigation.navigate('AquariumShow');
+  function handleNavigateToShow(id) {
+    navigation.navigate('AquariumShow', { aquariumId: id });
   }
 
   function handleNavigateToCreate() {
@@ -153,7 +168,7 @@ const Remember = () => {
                   )}>
                   <RectButton
                     style={styles.cardRemember}
-                    onPress={handleNavigateToShow}>
+                    onPress={() => handleNavigateToShow(aquarium.id)}>
                     <View style={styles.iconCard}>
                       <FishBowlOutline
                         width={50}

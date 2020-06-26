@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,28 @@ import {
   StatusBar,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import getRealm from '../../services/realm';
 
 const Remember = () => {
+  const [data, setData] = useState({});
+
   const navigation = useNavigation();
+  const route = useRoute();
+  const routeParams = route.params;
+
+  async function loadAquarium(id) {
+    const realm = await getRealm();
+    const loadedAquarium = realm.objectForPrimaryKey('Aquarium', id);
+
+    return loadedAquarium;
+  }
+
+  useEffect(() => {
+    loadAquarium(routeParams.aquariumId).then(response => {
+      setData(response);
+    });
+  }, [routeParams.aquariumId]);
 
   function handleNavigateBack() {
     navigation.goBack();
@@ -57,25 +75,27 @@ const Remember = () => {
             source={require('../../assets/images/photoaquarium.jpg')}
           />
           <View>
-            <Text style={styles.titleContent}>Aquário Principal</Text>
+            <Text style={styles.titleContent}>{data.name}</Text>
             <View style={styles.measuresContainer}>
               <View>
                 <Text style={styles.measuresTitle}>Comprimento</Text>
-                <Text style={styles.measuresDetail}>75 cm</Text>
+                <Text style={styles.measuresDetail}>{data.length} cm</Text>
               </View>
               <View>
                 <Text style={styles.measuresTitle}>Largura</Text>
-                <Text style={styles.measuresDetail}>35 cm</Text>
+                <Text style={styles.measuresDetail}>{data.width} cm</Text>
               </View>
               <View>
                 <Text style={styles.measuresTitle}>Altura</Text>
-                <Text style={styles.measuresDetail}>45 cm</Text>
+                <Text style={styles.measuresDetail}>{data.height} cm</Text>
               </View>
             </View>
             <View style={styles.measuresContainer}>
               <View>
                 <Text style={styles.measuresTitle}>Litragem</Text>
-                <Text style={styles.measuresDetail}>118 Litros</Text>
+                <Text style={styles.measuresDetail}>
+                  {data.length * data.height * data.width} Litros
+                </Text>
               </View>
             </View>
           </View>

@@ -8,7 +8,6 @@ import {
   StatusBar,
   SafeAreaView,
   StyleSheet,
-  Alert,
   Keyboard,
   ToastAndroid,
 } from 'react-native';
@@ -16,6 +15,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigation } from '@react-navigation/native';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import ImagePicker from 'react-native-image-picker';
 
 import getRealm from '../../services/realm';
 
@@ -26,7 +26,7 @@ const Remember = () => {
   const widthInput = useRef(null);
   const heightInput = useRef(null);
 
-  // const [imageStateInput, setImageStateInput] = useState();
+  const [imageStateInput, setImageStateInput] = useState();
   const [nameStateInput, setNameStateInput] = useState();
   const [lengthStateInput, setLengthStateInput] = useState();
   const [widthStateInput, setWidthStateInput] = useState();
@@ -61,9 +61,9 @@ const Remember = () => {
     });
   }
 
-  async function handleAddAquarium() {
+  function handleAddAquarium() {
     try {
-      await saveAquarium();
+      saveAquarium();
       ToastAndroid.showWithGravityAndOffset(
         'Salvo com sucesso!',
         ToastAndroid.SHORT,
@@ -82,6 +82,23 @@ const Remember = () => {
         50,
       );
     }
+  }
+
+  function handleChoosePhoto() {
+    const options = {
+      title: 'Foto do aquário',
+      customButtons: [{ name: 'aqua', title: 'Selecione a foto do aquário.' }],
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+      noData: true,
+    };
+    ImagePicker.launchImageLibrary(options, response => {
+      if (response.uri) {
+        setImageStateInput({ response });
+      }
+    });
   }
 
   function handleNavigateBack() {
@@ -124,7 +141,25 @@ const Remember = () => {
 
         <View style={styles.containerContent}>
           <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.inputImage} />
+            <RectButton style={styles.inputImage} onPress={handleChoosePhoto}>
+              <View style={{ alignItems: 'center' }}>
+                {imageStateInput ? (
+                  <Image
+                    source={{ uri: imageStateInput.response.uri }}
+                    style={styles.photoAquarium}
+                  />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons
+                      name="upload-outline"
+                      size={40}
+                      color="#909099"
+                    />
+                    <Text>Selecionar foto.</Text>
+                  </>
+                )}
+              </View>
+            </RectButton>
             <TextInput
               style={styles.input}
               placeholder="Nome do Aquário"
@@ -212,9 +247,17 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   inputImage: {
+    justifyContent: 'center',
     height: 150,
     backgroundColor: '#FFF',
     marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  photoAquarium: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
     borderRadius: 20,
   },
   input: {
