@@ -72,7 +72,9 @@ const Remember = () => {
         <View style={styles.containerContent}>
           <Image
             style={styles.photoAquarium}
-            source={require('../../assets/images/photoaquarium.jpg')}
+            source={{
+              uri: `file:///${data.imageName}`,
+            }}
           />
           <View>
             <Text style={styles.titleContent}>{data.name}</Text>

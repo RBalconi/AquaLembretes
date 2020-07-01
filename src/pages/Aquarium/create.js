@@ -10,14 +10,15 @@ import {
   StyleSheet,
   Keyboard,
   ToastAndroid,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ImagePicker from 'react-native-image-picker';
-
 import getRealm from '../../services/realm';
+import RNFS from 'react-native-fs';
 
 const Remember = () => {
   const navigation = useNavigation();
@@ -26,23 +27,23 @@ const Remember = () => {
   const widthInput = useRef(null);
   const heightInput = useRef(null);
 
-  const [imageStateInput, setImageStateInput] = useState();
-  const [nameStateInput, setNameStateInput] = useState();
-  const [lengthStateInput, setLengthStateInput] = useState();
-  const [widthStateInput, setWidthStateInput] = useState();
-  const [heightStateInput, setHeightStateInput] = useState();
+  const [imageStateInput, setImageStateInput] = useState('');
+  const [nameStateInput, setNameStateInput] = useState('');
+  const [lengthStateInput, setLengthStateInput] = useState('');
+  const [widthStateInput, setWidthStateInput] = useState('');
+  const [heightStateInput, setHeightStateInput] = useState('');
 
   const data = {
     id: null,
     name: nameStateInput,
-    imageName: 'image-fake.jpg',
+    imageName: null,
     length: Number(lengthStateInput),
     width: Number(widthStateInput),
     height: Number(heightStateInput),
   };
 
   function clearInputs() {
-    // setImageStateInput('');
+    setImageStateInput('');
     setNameStateInput('');
     setLengthStateInput('');
     setWidthStateInput('');
@@ -55,6 +56,8 @@ const Remember = () => {
     const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
     const highestId = lastAquarium == null ? 0 : lastAquarium.id;
     data.id = highestId == null ? 1 : highestId + 1;
+
+    data.imageName = await createPathPhoto(imageStateInput.response);
 
     realm.write(() => {
       realm.create('Aquarium', data);
@@ -99,6 +102,22 @@ const Remember = () => {
         setImageStateInput({ response });
       }
     });
+  }
+
+  async function createPathPhoto(file) {
+    const date = new Date();
+    const time =
+      date.getHours() + '' + date.getMinutes() + '' + date.getSeconds();
+
+    const destPath = RNFS.ExternalDirectoryPath + '/imagesAquariums';
+    const finalPath = destPath + '/' + time + file.fileName;
+
+    if ((await RNFS.exists(destPath)) === false) {
+      RNFS.mkdir(destPath);
+    }
+
+    RNFS.copyFile(file.path, finalPath);
+    return finalPath;
   }
 
   function handleNavigateBack() {
@@ -153,9 +172,11 @@ const Remember = () => {
                     <MaterialCommunityIcons
                       name="upload-outline"
                       size={40}
-                      color="#909099"
+                      color="#AFAFAF"
                     />
-                    <Text>Selecionar foto.</Text>
+                    <Text style={{ color: '#AFAFAF', fontSize: 15 }}>
+                      Selecionar foto.
+                    </Text>
                   </>
                 )}
               </View>

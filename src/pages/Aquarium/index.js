@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { RectButton } from 'react-native-gesture-handler';
 import getRealm from '../../services/realm';
+import RNFS from 'react-native-fs';
 
 import FishBowlOutline from '../../components/icons/fishbowl-outline.js';
 
@@ -24,16 +25,19 @@ const Remember = () => {
 
   const [aquariums, setAquariums] = useState([]);
 
-  async function deleteAquarium(id) {
+  async function deleteAquarium(aquarium) {
     const realm = await getRealm();
     try {
       const deletingAquarium = realm
         .objects('Aquarium')
-        .filtered(`id = '${id}'`);
+        .filtered(`id = '${aquarium.aquarium.id}'`);
+
+      // console.log('Object: ' + JSON.stringify(aquarium.aquarium, null, 2));
 
       realm.write(() => {
         realm.delete(deletingAquarium);
       });
+      RNFS.unlink(aquarium.aquarium.imageName);
     } catch (error) {
       ToastAndroid.showWithGravityAndOffset(
         'Ocorreu um erro ao excluir!',
@@ -53,7 +57,7 @@ const Remember = () => {
         {
           text: 'Sim',
           onPress: () => {
-            deleteAquarium(aquarium.aquarium.id);
+            deleteAquarium(aquarium);
           },
         },
         {
@@ -68,6 +72,7 @@ const Remember = () => {
     const realm = await getRealm();
     const data = realm.objects('Aquarium').sorted('name', false);
     setAquariums(data);
+    Alert.alert('indexAqua', 'index');
   }
 
   useEffect(() => {
@@ -79,7 +84,6 @@ const Remember = () => {
       const realm = await getRealm();
       realm.removeListener('change', () => setAquariumsRealm());
     }
-
     startListenerRefreshAquarium();
     return () => {
       removeListenerRefreshAquarium();
