@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -72,23 +72,24 @@ const Remember = () => {
     const realm = await getRealm();
     const data = realm.objects('Aquarium').sorted('name', false);
     setAquariums(data);
-    Alert.alert('indexAqua', 'index');
   }
+  async function removeListenerRefreshAquarium() {
+    const realm = await getRealm();
+    realm.removeListener('change', () => {});
+  }
+  const startListenerRefreshAquarium = useCallback(async () => {
+    const realm = await getRealm();
+    realm.addListener('change', () => setAquariumsRealm());
+  }, []);
 
   useEffect(() => {
-    async function startListenerRefreshAquarium() {
-      const realm = await getRealm();
-      realm.addListener('change', () => setAquariumsRealm());
-    }
-    async function removeListenerRefreshAquarium() {
-      const realm = await getRealm();
-      realm.removeListener('change', () => setAquariumsRealm());
-    }
     startListenerRefreshAquarium();
+    setAquariumsRealm();
     return () => {
       removeListenerRefreshAquarium();
+      setAquariumsRealm();
     };
-  }, []);
+  }, [startListenerRefreshAquarium]);
 
   function handleNavigateBack() {
     navigation.goBack();

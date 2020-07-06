@@ -37,9 +37,9 @@ const Remember = () => {
     id: null,
     name: nameStateInput,
     imageName: null,
-    length: Number(lengthStateInput),
-    width: Number(widthStateInput),
-    height: Number(heightStateInput),
+    length: parseFloat(lengthStateInput),
+    width: parseFloat(widthStateInput),
+    height: parseFloat(heightStateInput),
   };
 
   function clearInputs() {

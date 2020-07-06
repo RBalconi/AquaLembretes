@@ -6,9 +6,9 @@ export default class AquariumSchema {
       id: { type: 'int', indexed: true },
       name: 'string',
       imageName: 'string',
-      length: 'int',
-      width: 'int',
-      height: 'int',
+      length: 'float',
+      width: 'float',
+      height: 'float',
     },
   };
 }
