@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,98 +10,89 @@ import {
   StyleSheet,
   Keyboard,
   ToastAndroid,
-  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ImagePicker from 'react-native-image-picker';
 import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
 
-const Remember = () => {
+const AquariumCreate = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const routeParams = route.params;
 
   const lengthInput = useRef(null);
   const widthInput = useRef(null);
   const heightInput = useRef(null);
 
-  const [imageStateInput, setImageStateInput] = useState('');
-  const [nameStateInput, setNameStateInput] = useState('');
-  const [lengthStateInput, setLengthStateInput] = useState('');
-  const [widthStateInput, setWidthStateInput] = useState('');
-  const [heightStateInput, setHeightStateInput] = useState('');
+  const [data, setData] = useState({
+    id: '',
+    name: '',
+    imageName: '',
+    length: '',
+    width: '',
+    height: '',
+  });
 
-  const data = {
-    id: null,
-    name: nameStateInput,
-    imageName: null,
-    length: parseFloat(lengthStateInput),
-    width: parseFloat(widthStateInput),
-    height: parseFloat(heightStateInput),
-  };
+  async function loadAquarium(id) {
+    const realm = await getRealm();
+    const loadedAquarium = realm.objectForPrimaryKey('Aquarium', id);
 
-  function clearInputs() {
-    setImageStateInput('');
-    setNameStateInput('');
-    setLengthStateInput('');
-    setWidthStateInput('');
-    setHeightStateInput('');
+    return loadedAquarium;
   }
+
+  useEffect(() => {
+    if (routeParams.aquariumId !== 0) {
+      loadAquarium(routeParams.aquariumId).then(response => {
+        setData({
+          id: response.id,
+          name: String(response.name),
+          imageName: { uri: String('file://' + response.imageName) },
+          length: String(response.length),
+          width: String(response.width),
+          height: String(response.height),
+        });
+        // console.log('useEffect::: ' + JSON.stringify(data, null, 2));
+      });
+    }
+  }, [routeParams.aquariumId]);
 
   async function saveAquarium() {
     const realm = await getRealm();
 
-    const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
-    const highestId = lastAquarium == null ? 0 : lastAquarium.id;
-    data.id = highestId == null ? 1 : highestId + 1;
+    console.log('data::: ' + JSON.stringify(data, null, 2));
+    if (!data.id) {
+      const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
+      const highestId = lastAquarium == null ? 0 : lastAquarium.id;
+      const newId = highestId == null ? 1 : highestId + 1;
+      data.id = newId;
+      setData({ data });
+    }
 
-    data.imageName = await createPathPhoto(imageStateInput.response);
+    if (data.imageName.fileName) {
+      const imageName = await createPathPhoto(data.imageName);
+      data.imageName.uri = imageName;
+      setData({ data });
+    }
 
     realm.write(() => {
-      realm.create('Aquarium', data);
-    });
-  }
-
-  function handleAddAquarium() {
-    try {
-      saveAquarium();
-      ToastAndroid.showWithGravityAndOffset(
-        'Salvo com sucesso!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
+      realm.create(
+        'Aquarium',
+        {
+          id: data.id,
+          name: data.name,
+          imageName: data.imageName.uri,
+          length: parseFloat(data.length),
+          width: parseFloat(data.width),
+          height: parseFloat(data.height),
+        },
+        'modified',
       );
-      Keyboard.dismiss();
-      clearInputs();
-    } catch (error) {
-      ToastAndroid.showWithGravityAndOffset(
-        'Ocorreu um erro!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-    }
-  }
-
-  function handleChoosePhoto() {
-    const options = {
-      title: 'Foto do aquário',
-      customButtons: [{ name: 'aqua', title: 'Selecione a foto do aquário.' }],
-      storageOptions: {
-        skipBackup: true,
-        path: 'images',
-      },
-      noData: true,
-    };
-    ImagePicker.launchImageLibrary(options, response => {
-      if (response.uri) {
-        setImageStateInput({ response });
-      }
     });
+    console.log('save-edit::: ' + JSON.stringify(data, null, 2));
   }
 
   async function createPathPhoto(file) {
@@ -118,6 +109,60 @@ const Remember = () => {
 
     RNFS.copyFile(file.path, finalPath);
     return finalPath;
+  }
+
+  function handleChoosePhoto() {
+    const options = {
+      title: 'Foto do aquário',
+      customButtons: [{ name: 'aqua', title: 'Selecione a foto do aquário.' }],
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+      noData: true,
+    };
+    ImagePicker.launchImageLibrary(options, response => {
+      if (response.uri) {
+        setData({
+          ...data,
+          imageName: {
+            uri: response.uri,
+            fileName: response.fileName,
+            path: response.path,
+          },
+        });
+      }
+    });
+  }
+
+  function handleAddAquarium() {
+    try {
+      saveAquarium();
+      setData({
+        id: '',
+        name: '',
+        imageName: '',
+        length: '',
+        width: '',
+        height: '',
+      });
+      ToastAndroid.showWithGravityAndOffset(
+        'Salvo com sucesso!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      Keyboard.dismiss();
+    } catch (error) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Ocorreu um erro!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
   }
 
   function handleNavigateBack() {
@@ -162,9 +207,9 @@ const Remember = () => {
           <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
             <RectButton style={styles.inputImage} onPress={handleChoosePhoto}>
               <View style={{ alignItems: 'center' }}>
-                {imageStateInput ? (
+                {data.imageName ? (
                   <Image
-                    source={{ uri: imageStateInput.response.uri }}
+                    source={{ uri: data.imageName.uri }}
                     style={styles.photoAquarium}
                   />
                 ) : (
@@ -183,40 +228,40 @@ const Remember = () => {
             </RectButton>
             <TextInput
               style={styles.input}
-              placeholder="Nome do Aquário"
+              placeholder="Nome"
               returnKeyType={'next'}
               onSubmitEditing={() => lengthInput.current.focus()}
-              value={nameStateInput}
-              onChangeText={setNameStateInput}
+              value={data.name}
+              onChangeText={text => setData({ ...data, name: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Comprimento (cm)"
-              keyboardType={'numeric'}
-              returnKeyType={'next'}
+              keyboardType="numeric"
+              returnKeyType="next"
               ref={lengthInput}
               onSubmitEditing={() => widthInput.current.focus()}
-              value={lengthStateInput}
-              onChangeText={setLengthStateInput}
+              value={data?.length ?? ''}
+              onChangeText={text => setData({ ...data, length: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Largura (cm)"
-              keyboardType={'numeric'}
-              returnKeyType={'next'}
+              keyboardType="numeric"
+              returnKeyType="next"
               ref={widthInput}
               onSubmitEditing={() => heightInput.current.focus()}
-              value={widthStateInput}
-              onChangeText={setWidthStateInput}
+              value={data?.width ?? ''}
+              onChangeText={text => setData({ ...data, width: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Altura (cm)"
-              keyboardType={'numeric'}
-              returnKeyType={'done'}
+              keyboardType="numeric"
+              returnKeyType="done"
               ref={heightInput}
-              value={heightStateInput}
-              onChangeText={setHeightStateInput}
+              value={data.height ?? ''}
+              onChangeText={text => setData({ ...data, height: text })}
             />
             <RectButton style={styles.button} onPress={handleAddAquarium}>
               <View style={styles.buttonIcon}>
@@ -320,4 +365,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Remember;
+export default AquariumCreate;

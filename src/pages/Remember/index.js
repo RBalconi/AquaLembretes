@@ -12,7 +12,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 
-const Remember = () => {
+const RememberIndex = () => {
   const navigation = useNavigation();
 
   function handleNavigateBack() {
@@ -229,4 +229,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Remember;
+export default RememberIndex;

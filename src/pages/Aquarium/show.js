@@ -12,7 +12,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigation, useRoute } from '@react-navigation/native';
 import getRealm from '../../services/realm';
 
-const Remember = () => {
+const AquariumShow = () => {
   const [data, setData] = useState({});
 
   const navigation = useNavigation();
@@ -73,7 +73,7 @@ const Remember = () => {
           <Image
             style={styles.photoAquarium}
             source={{
-              uri: `file:///${data.imageName}`,
+              uri: `file://${data.imageName}`,
             }}
           />
           <View>
@@ -170,4 +170,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Remember;
+export default AquariumShow;

@@ -20,7 +20,7 @@ import RNFS from 'react-native-fs';
 
 import FishBowlOutline from '../../components/icons/fishbowl-outline.js';
 
-const Remember = () => {
+const AquariumIndex = () => {
   const navigation = useNavigation();
 
   const [aquariums, setAquariums] = useState([]);
@@ -91,22 +91,26 @@ const Remember = () => {
     };
   }, [startListenerRefreshAquarium]);
 
+  function handleEditAquarium(aquarium) {
+    navigation.navigate('AquariumCreate', { aquariumId: aquarium.aquarium.id });
+  }
+
   function handleNavigateBack() {
     navigation.goBack();
   }
-
   function handleNavigateToShow(id) {
     navigation.navigate('AquariumShow', { aquariumId: id });
   }
-
   function handleNavigateToCreate() {
-    navigation.navigate('AquariumCreate');
+    navigation.navigate('AquariumCreate', { aquariumId: 0 });
   }
 
   const SwipeableRightActions = aquarium => {
     return (
       <View style={styles.containerSwipeable}>
-        <RectButton style={styles.containerItemSwipeable} onPress={() => {}}>
+        <RectButton
+          style={styles.containerItemSwipeable}
+          onPress={() => handleEditAquarium(aquarium)}>
           <MaterialCommunityIcons
             name="file-document-edit-outline"
             size={30}
@@ -311,4 +315,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Remember;
+export default AquariumIndex;
