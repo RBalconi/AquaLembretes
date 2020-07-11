@@ -6,38 +6,37 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  ScrollView,
   StatusBar,
   Alert,
   ToastAndroid,
+  FlatList,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
-import { RectButton } from 'react-native-gesture-handler';
 import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
 
-import FishBowlOutline from '../../components/icons/fishbowl-outline.js';
+import SwipeableList from '../../components/swipeableList';
+import Loading from '../../components/loading';
 
 const AquariumIndex = () => {
   const navigation = useNavigation();
 
   const [aquariums, setAquariums] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   async function deleteAquarium(aquarium) {
+    setIsLoading(true);
     const realm = await getRealm();
     try {
       const deletingAquarium = realm
         .objects('Aquarium')
-        .filtered(`id = '${aquarium.aquarium.id}'`);
-
-      // console.log('Object: ' + JSON.stringify(aquarium.aquarium, null, 2));
+        .filtered(`id = '${aquarium.id}'`);
 
       realm.write(() => {
         realm.delete(deletingAquarium);
       });
-      RNFS.unlink(aquarium.aquarium.imageName);
+      RNFS.unlink(aquarium.imageName);
     } catch (error) {
       ToastAndroid.showWithGravityAndOffset(
         'Ocorreu um erro ao excluir!',
@@ -47,12 +46,13 @@ const AquariumIndex = () => {
         50,
       );
     }
+    setIsLoading(false);
   }
 
   function handleDeleteAquarium(aquarium) {
     Alert.alert(
       'Excluir',
-      `Tem certeza que deseja excluir "${aquarium.aquarium.name}"?`,
+      `Tem certeza que deseja excluir "${aquarium.name}"?`,
       [
         {
           text: 'Sim',
@@ -69,9 +69,11 @@ const AquariumIndex = () => {
   }
 
   async function setAquariumsRealm() {
+    setIsLoading(true);
     const realm = await getRealm();
     const data = realm.objects('Aquarium').sorted('name', false);
     setAquariums(data);
+    setIsLoading(false);
   }
   async function removeListenerRefreshAquarium() {
     const realm = await getRealm();
@@ -92,12 +94,9 @@ const AquariumIndex = () => {
   }, [startListenerRefreshAquarium]);
 
   function handleEditAquarium(aquarium) {
-    navigation.navigate('AquariumCreate', { aquariumId: aquarium.aquarium.id });
+    navigation.navigate('AquariumCreate', { aquariumId: aquarium.id });
   }
 
-  function handleNavigateBack() {
-    navigation.goBack();
-  }
   function handleNavigateToShow(id) {
     navigation.navigate('AquariumShow', { aquariumId: id });
   }
@@ -105,32 +104,9 @@ const AquariumIndex = () => {
     navigation.navigate('AquariumCreate', { aquariumId: 0 });
   }
 
-  const SwipeableRightActions = aquarium => {
-    return (
-      <View style={styles.containerSwipeable}>
-        <RectButton
-          style={styles.containerItemSwipeable}
-          onPress={() => handleEditAquarium(aquarium)}>
-          <MaterialCommunityIcons
-            name="file-document-edit-outline"
-            size={30}
-            color="#0055AA"
-          />
-          <Text>Editar</Text>
-        </RectButton>
-        <RectButton
-          style={styles.containerItemSwipeable}
-          onPress={() => handleDeleteAquarium(aquarium)}>
-          <MaterialCommunityIcons
-            name="trash-can-outline"
-            size={30}
-            color="#0055AA"
-          />
-          <Text>Deletar</Text>
-        </RectButton>
-      </View>
-    );
-  };
+  function handleNavigateBack() {
+    navigation.goBack();
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -139,7 +115,6 @@ const AquariumIndex = () => {
         backgroundColor="transparent"
         translucent
       />
-
       <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
         <View style={styles.container}>
           <View style={styles.containerHeader}>
@@ -166,37 +141,22 @@ const AquariumIndex = () => {
           </View>
         </View>
         <View style={styles.containerContent}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 20 }}>
-            {aquariums.map(aquarium => (
-              <View key={aquarium.id} style={styles.containerCardRemember}>
-                <Swipeable
-                  renderRightActions={id => (
-                    <SwipeableRightActions aquarium={aquarium} />
-                  )}>
-                  <RectButton
-                    style={styles.cardRemember}
-                    onPress={() => handleNavigateToShow(aquarium.id)}>
-                    <View style={styles.iconCard}>
-                      <FishBowlOutline
-                        width={50}
-                        height={50}
-                        fill={'#0055AA'}
-                      />
-                    </View>
-                    <View style={styles.textsCard}>
-                      <Text style={styles.titleCard}>{aquarium.name}</Text>
-                      <Text style={styles.dataCard}>
-                        {aquarium.length * aquarium.height * aquarium.width}{' '}
-                        litros
-                      </Text>
-                    </View>
-                  </RectButton>
-                </Swipeable>
-              </View>
-            ))}
-          </ScrollView>
+          <Loading show={isLoading} color={'#0055AA'} size={'large'} />
+          <View>
+            <FlatList
+              data={aquariums}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => (
+                <SwipeableList
+                  data={item}
+                  handleDelete={handleDeleteAquarium}
+                  handleEdit={handleEditAquarium}
+                  handleShow={handleNavigateToShow}
+                />
+              )}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
         </View>
       </View>
       <TouchableOpacity
@@ -232,7 +192,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu-Medium',
     marginBottom: 40,
   },
-  imageHeader: {},
 
   containerContent: {
     flex: 1,

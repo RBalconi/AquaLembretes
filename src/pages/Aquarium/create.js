@@ -63,7 +63,6 @@ const AquariumCreate = () => {
   async function saveAquarium() {
     const realm = await getRealm();
 
-    console.log('data::: ' + JSON.stringify(data, null, 2));
     if (!data.id) {
       const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
       const highestId = lastAquarium == null ? 0 : lastAquarium.id;
@@ -92,7 +91,6 @@ const AquariumCreate = () => {
         'modified',
       );
     });
-    console.log('save-edit::: ' + JSON.stringify(data, null, 2));
   }
 
   async function createPathPhoto(file) {
