@@ -83,6 +83,8 @@ target 'AquaHelpCLI' do
 
   pod 'RNFS', :path => '../node_modules/react-native-fs'
 
+  pod 'lottie-react-native', :path => '../node_modules/lottie-react-native'
+
   target 'AquaHelpCLITests' do
     inherit! :complete
     # Pods for testing

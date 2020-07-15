@@ -70,35 +70,6 @@ function SwipeableList({ data, handleShow, handleDelete, handleEdit }) {
 }
 
 const styles = StyleSheet.create({
-  buttonBack: {
-    flexWrap: 'wrap',
-    padding: 6,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-  },
-
-  containerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    minHeight: 180,
-  },
-  title: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Ubuntu-Medium',
-    marginBottom: 40,
-  },
-  imageHeader: {},
-
-  containerContent: {
-    flex: 1,
-    backgroundColor: '#f0f0f5',
-    borderTopStartRadius: 40,
-    padding: 20,
-    paddingBottom: 0,
-  },
-
   containerCardRemember: {
     backgroundColor: '#FFF',
     borderRadius: 20,
@@ -136,26 +107,6 @@ const styles = StyleSheet.create({
     color: '#334455',
     fontFamily: 'Roboto-Light',
     fontSize: 14,
-  },
-  floattingButton: {
-    position: 'absolute',
-    width: 57,
-    height: 57,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#0055AA',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-
-    elevation: 7,
   },
   containerSwipeable: {
     flexDirection: 'row',

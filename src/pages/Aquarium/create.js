@@ -19,6 +19,8 @@ import ImagePicker from 'react-native-image-picker';
 import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
 
+import Header from '../../components/header';
+
 const AquariumCreate = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -177,28 +179,7 @@ const AquariumCreate = () => {
 
       <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
         <View style={styles.container}>
-          <View style={styles.containerHeader}>
-            <View style={{ justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, flexWrap: 'wrap' }}>
-                <TouchableOpacity
-                  style={styles.buttonBack}
-                  onPress={handleNavigateBack}
-                  activeOpacity={0.6}>
-                  <MaterialCommunityIcons
-                    name="chevron-left"
-                    size={24}
-                    color="#0055AA"
-                  />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.title}>Aquários</Text>
-            </View>
-
-            <Image
-              style={styles.imageHeader}
-              source={require('../../assets/images/aquarium.png')}
-            />
-          </View>
+          <Header title={'Aquários'} animation={'aquarium'} />
         </View>
 
         <View style={styles.containerContent}>

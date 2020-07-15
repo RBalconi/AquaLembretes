@@ -44,6 +44,7 @@ const RememberIndex = () => {
               </View>
               <Text style={styles.title}>Lembretes</Text>
             </View>
+
             <Image
               style={styles.imageHeader}
               source={require('../../assets/images/clock-remember.png')}

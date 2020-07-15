@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
-  Image,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   Alert,
+  TouchableOpacity,
   ToastAndroid,
   FlatList,
 } from 'react-native';
@@ -18,6 +16,7 @@ import RNFS from 'react-native-fs';
 
 import SwipeableList from '../../components/swipeableList';
 import Loading from '../../components/loading';
+import Header from '../../components/header';
 
 const AquariumIndex = () => {
   const navigation = useNavigation();
@@ -104,10 +103,6 @@ const AquariumIndex = () => {
     navigation.navigate('AquariumCreate', { aquariumId: 0 });
   }
 
-  function handleNavigateBack() {
-    navigation.goBack();
-  }
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar
@@ -117,28 +112,7 @@ const AquariumIndex = () => {
       />
       <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
         <View style={styles.container}>
-          <View style={styles.containerHeader}>
-            <View style={{ justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, flexWrap: 'wrap' }}>
-                <TouchableOpacity
-                  style={styles.buttonBack}
-                  onPress={handleNavigateBack}
-                  activeOpacity={0.6}>
-                  <MaterialCommunityIcons
-                    name="chevron-left"
-                    size={24}
-                    color="#0055AA"
-                  />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.title}>Aquários</Text>
-            </View>
-
-            <Image
-              style={styles.imageHeader}
-              source={require('../../assets/images/aquarium.png')}
-            />
-          </View>
+          <Header title={'Aquários'} animation={'aquarium'} />
         </View>
         <View style={styles.containerContent}>
           <Loading show={isLoading} color={'#0055AA'} size={'large'} />
@@ -173,25 +147,6 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingTop: 20 + StatusBar.currentHeight,
   },
-  buttonBack: {
-    flexWrap: 'wrap',
-    padding: 6,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-  },
-
-  containerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    minHeight: 180,
-  },
-  title: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Ubuntu-Medium',
-    marginBottom: 40,
-  },
 
   containerContent: {
     flex: 1,
@@ -201,43 +156,6 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
 
-  containerCardRemember: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  cardRemember: {
-    borderRadius: 20,
-
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 20,
-  },
-
-  titleCard: {
-    color: '#334455',
-    fontFamily: 'Roboto-Bold',
-    fontSize: 20,
-    paddingBottom: 4,
-  },
-  iconCard: {
-    paddingLeft: 10,
-    paddingRight: 30,
-    alignSelf: 'center',
-  },
-  textsCard: {
-    flex: 1,
-    alignContent: 'space-between',
-  },
-  detailsCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  dataCard: {
-    color: '#334455',
-    fontFamily: 'Roboto-Light',
-    fontSize: 14,
-  },
   floattingButton: {
     position: 'absolute',
     width: 57,
@@ -257,20 +175,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
 
     elevation: 7,
-  },
-  containerSwipeable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 20,
-  },
-  containerItemSwipeable: {
-    marginLeft: 20,
-    backgroundColor: '#FFF',
-    alignItems: 'center',
-    alignContent: 'center',
   },
 });
 
