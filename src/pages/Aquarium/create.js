@@ -3,26 +3,21 @@ import {
   View,
   Text,
   Image,
-  TouchableOpacity,
   TextInput,
   StatusBar,
-  SafeAreaView,
   StyleSheet,
   Keyboard,
   ToastAndroid,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ImagePicker from 'react-native-image-picker';
 import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
 
-import Header from '../../components/header';
-
 const AquariumCreate = () => {
-  const navigation = useNavigation();
   const route = useRoute();
   const routeParams = route.params;
 
@@ -164,133 +159,90 @@ const AquariumCreate = () => {
       );
     }
   }
-
-  function handleNavigateBack() {
-    navigation.goBack();
-  }
+  const handleInputValidate = text => {
+    if (/^[\d,.]+$/.test(text) || text === '') {
+      return text;
+    }
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
-
-      <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
-        <View style={styles.container}>
-          <Header title={'Aquários'} animation={'aquarium'} />
-        </View>
-
-        <View style={styles.containerContent}>
-          <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-            <RectButton style={styles.inputImage} onPress={handleChoosePhoto}>
-              <View style={{ alignItems: 'center' }}>
-                {data.imageName ? (
-                  <Image
-                    source={{ uri: data.imageName.uri }}
-                    style={styles.photoAquarium}
-                  />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons
-                      name="upload-outline"
-                      size={40}
-                      color="#AFAFAF"
-                    />
-                    <Text style={{ color: '#AFAFAF', fontSize: 15 }}>
-                      Selecionar foto.
-                    </Text>
-                  </>
-                )}
-              </View>
-            </RectButton>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome"
-              returnKeyType={'next'}
-              onSubmitEditing={() => lengthInput.current.focus()}
-              value={data.name}
-              onChangeText={text => setData({ ...data, name: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Comprimento (cm)"
-              keyboardType="numeric"
-              returnKeyType="next"
-              ref={lengthInput}
-              onSubmitEditing={() => widthInput.current.focus()}
-              value={data?.length ?? ''}
-              onChangeText={text => setData({ ...data, length: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Largura (cm)"
-              keyboardType="numeric"
-              returnKeyType="next"
-              ref={widthInput}
-              onSubmitEditing={() => heightInput.current.focus()}
-              value={data?.width ?? ''}
-              onChangeText={text => setData({ ...data, width: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Altura (cm)"
-              keyboardType="numeric"
-              returnKeyType="done"
-              ref={heightInput}
-              value={data.height ?? ''}
-              onChangeText={text => setData({ ...data, height: text })}
-            />
-            <RectButton style={styles.button} onPress={handleAddAquarium}>
-              <View style={styles.buttonIcon}>
+    <>
+      <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
+        <RectButton style={styles.inputImage} onPress={handleChoosePhoto}>
+          <View style={{ alignItems: 'center' }}>
+            {data.imageName ? (
+              <Image
+                source={{ uri: data.imageName.uri }}
+                style={styles.photoAquarium}
+              />
+            ) : (
+              <>
                 <MaterialCommunityIcons
-                  name="arrow-right"
-                  color="#FFF"
-                  size={24}
+                  name="upload-outline"
+                  size={40}
+                  color="#AFAFAF"
                 />
-              </View>
-              <Text style={styles.buttonText}>Salvar</Text>
-            </RectButton>
-          </KeyboardAwareScrollView>
-        </View>
-      </View>
-    </SafeAreaView>
+                <Text style={{ color: '#AFAFAF', fontSize: 15 }}>
+                  Selecionar foto.
+                </Text>
+              </>
+            )}
+          </View>
+        </RectButton>
+        <TextInput
+          style={styles.input}
+          placeholder="Nome"
+          returnKeyType={'next'}
+          onSubmitEditing={() => lengthInput.current.focus()}
+          value={data.name}
+          onChangeText={text => setData({ ...data, name: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Comprimento (cm)"
+          keyboardType="numeric"
+          returnKeyType="next"
+          ref={lengthInput}
+          onSubmitEditing={() => widthInput.current.focus()}
+          value={data?.length ?? ''}
+          onChangeText={text => {
+            setData({ ...data, length: handleInputValidate(text) });
+          }}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Largura (cm)"
+          keyboardType="numeric"
+          returnKeyType="next"
+          ref={widthInput}
+          onSubmitEditing={() => heightInput.current.focus()}
+          value={data?.width ?? ''}
+          onChangeText={text =>
+            setData({ ...data, width: handleInputValidate(text) })
+          }
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Altura (cm)"
+          keyboardType="numeric"
+          returnKeyType="done"
+          ref={heightInput}
+          value={data.height ?? ''}
+          onChangeText={text =>
+            setData({ ...data, height: handleInputValidate(text) })
+          }
+        />
+        <RectButton style={styles.button} onPress={handleAddAquarium}>
+          <View style={styles.buttonIcon}>
+            <MaterialCommunityIcons name="arrow-right" color="#FFF" size={24} />
+          </View>
+          <Text style={styles.buttonText}>Salvar</Text>
+        </RectButton>
+      </KeyboardAwareScrollView>
+    </>
   );
 };
 const styles = StyleSheet.create({
-  container: {
-    paddingLeft: 20,
-    paddingTop: 20 + StatusBar.currentHeight,
-  },
-  buttonBack: {
-    flexWrap: 'wrap',
-    padding: 6,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-  },
-
-  containerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    minHeight: 180,
-  },
-  title: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Ubuntu-Medium',
-    marginBottom: 40,
-  },
-  imageHeader: {},
-
-  containerContent: {
-    flex: 1,
-    backgroundColor: '#f0f0f5',
-    borderTopStartRadius: 40,
-    padding: 20,
-    paddingBottom: 0,
-  },
   inputImage: {
     justifyContent: 'center',
     height: 150,

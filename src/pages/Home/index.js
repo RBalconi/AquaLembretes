@@ -37,7 +37,7 @@ const Home = () => {
           <Text style={styles.title}>Olá,{'\n'}Seja bem-vindo.</Text>
         </View>
 
-        <View style={styles.cardRemember}>
+        <View style={[styles.cardRemember]}>
           <Text style={styles.titleRemember}>Próximo lembrete:</Text>
           <Text style={styles.descriptionRemember}>NPK Plus MBreda</Text>
           <Text style={styles.descriptionRemember}>Aquário Principal</Text>
@@ -88,6 +88,15 @@ const Home = () => {
   );
 };
 
+const stylesdark = StyleSheet.create({
+  title: {
+    color: '#FFF',
+  },
+  container: {
+    backgroundColor: '#334455',
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -106,6 +115,7 @@ const styles = StyleSheet.create({
 
   cardRemember: {
     backgroundColor: '#0055AA',
+
     borderRadius: 20,
     padding: 20,
     overflow: 'hidden',
@@ -141,6 +151,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   textTitleMenu: {
+    color: '#334455',
     fontFamily: 'Roboto-Medium',
     fontSize: 20,
   },
@@ -158,6 +169,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textItemMenu: {
+    color: '#334455',
     fontFamily: 'Roboto-Medium',
     textAlign: 'center',
     fontSize: 16,

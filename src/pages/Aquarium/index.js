@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Alert,
   TouchableOpacity,
   ToastAndroid,
   FlatList,
+  Text,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,9 +16,8 @@ import RNFS from 'react-native-fs';
 
 import SwipeableList from '../../components/swipeableList';
 import Loading from '../../components/loading';
-import Header from '../../components/header';
 
-const AquariumIndex = () => {
+const AquariumIndex = props => {
   const navigation = useNavigation();
 
   const [aquariums, setAquariums] = useState([]);
@@ -73,24 +72,31 @@ const AquariumIndex = () => {
     const data = realm.objects('Aquarium').sorted('name', false);
     setAquariums(data);
     setIsLoading(false);
+    // console.log('setAquariumsRealm');
   }
   async function removeListenerRefreshAquarium() {
     const realm = await getRealm();
     realm.removeListener('change', () => {});
+    // console.log('removeListenerRefreshAquarium');
   }
   const startListenerRefreshAquarium = useCallback(async () => {
     const realm = await getRealm();
     realm.addListener('change', () => setAquariumsRealm());
+    // console.log('startListenerRefreshAquarium');
   }, []);
 
   useEffect(() => {
     startListenerRefreshAquarium();
-    setAquariumsRealm();
+    // setAquariumsRealm();
     return () => {
       removeListenerRefreshAquarium();
-      setAquariumsRealm();
+      // setAquariumsRealm();
     };
   }, [startListenerRefreshAquarium]);
+
+  useEffect(() => {
+    setAquariumsRealm();
+  }, []);
 
   function handleEditAquarium(aquarium) {
     navigation.navigate('AquariumCreate', { aquariumId: aquarium.id });
@@ -100,23 +106,20 @@ const AquariumIndex = () => {
     navigation.navigate('AquariumShow', { aquariumId: id });
   }
   function handleNavigateToCreate() {
+    // props.navigation.navigate('AquariumCreate', { aquariumId: 0 });
     navigation.navigate('AquariumCreate', { aquariumId: 0 });
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
-      <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
-        <View style={styles.container}>
-          <Header title={'Aquários'} animation={'aquarium'} />
-        </View>
-        <View style={styles.containerContent}>
-          <Loading show={isLoading} color={'#0055AA'} size={'large'} />
-          <View>
+    <>
+      <View style={styles.containerContent}>
+        <Loading show={isLoading} color={'#0055AA'} size={'large'} />
+        <View>
+          {aquariums.length <= 0 && isLoading !== true ? (
+            <Text style={{ color: '#000', alignSelf: 'center' }}>
+              Nenhum aquário cadastrado.
+            </Text>
+          ) : (
             <FlatList
               data={aquariums}
               keyExtractor={item => String(item.id)}
@@ -130,7 +133,7 @@ const AquariumIndex = () => {
               )}
               showsVerticalScrollIndicator={false}
             />
-          </View>
+          )}
         </View>
       </View>
       <TouchableOpacity
@@ -139,7 +142,7 @@ const AquariumIndex = () => {
         activeOpacity={0.6}>
         <MaterialCommunityIcons name="plus" size={44} color="#FFF" />
       </TouchableOpacity>
-    </SafeAreaView>
+    </>
   );
 };
 const styles = StyleSheet.create({
@@ -152,7 +155,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f0f5',
     borderTopStartRadius: 40,
-    padding: 20,
     paddingBottom: 0,
   },
 
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
     height: 57,
     alignItems: 'center',
     justifyContent: 'center',
-    right: 20,
+    right: 0,
     bottom: 20,
     backgroundColor: '#0055AA',
     borderRadius: 20,
