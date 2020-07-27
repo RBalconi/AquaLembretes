@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   TextInput,
-  StatusBar,
   StyleSheet,
   Keyboard,
   ToastAndroid,
@@ -47,7 +46,7 @@ const AquariumCreate = () => {
         setData({
           id: response.id,
           name: String(response.name),
-          imageName: { uri: String('file://' + response.imageName) },
+          imageName: { uri: String(response.imageName) },
           length: String(response.length),
           width: String(response.width),
           height: String(response.height),
@@ -70,7 +69,7 @@ const AquariumCreate = () => {
 
     if (data.imageName.fileName) {
       const imageName = await createPathPhoto(data.imageName);
-      data.imageName.uri = imageName;
+      data.imageName.uri = 'file://' + imageName;
       setData({ data });
     }
 

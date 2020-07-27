@@ -55,7 +55,7 @@ const AquariumShow = () => {
           <View>
             <Text style={styles.measuresTitle}>Litragem</Text>
             <Text style={styles.measuresDetail}>
-              {data.length * data.height * data.width} Litros
+              {(data.length * data.height * data.width) / 1000} Litros
             </Text>
           </View>
         </View>

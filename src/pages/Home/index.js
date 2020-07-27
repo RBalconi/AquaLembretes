@@ -8,14 +8,16 @@ import {
   TouchableOpacity,
   StatusBar,
   SafeAreaView,
+  Appearance,
+  useColorScheme,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 
-import FishBowlOutline from '../../components/icons/fishbowl-outline.js';
-
 const Home = () => {
   const navigation = useNavigation();
+
+  const theme = useColorScheme();
 
   function handleNavigateToRemember() {
     navigation.navigate('Remember');
@@ -77,7 +79,11 @@ const Home = () => {
               style={styles.menuItem}
               onPress={handleNavigateToAquarium}
               activeOpacity={0.6}>
-              <FishBowlOutline width={50} height={50} fill={'#0055AA'} />
+              <MaterialCommunityIcons
+                name="fishbowl-outline"
+                color="#0055AA"
+                size={50}
+              />
 
               <Text style={styles.textItemMenu}>Aquários</Text>
             </TouchableOpacity>

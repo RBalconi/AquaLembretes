@@ -1,10 +1,8 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { RectButton } from 'react-native-gesture-handler';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-import FishBowlOutline from '../components/icons/fishbowl-outline';
 
 const SwipeableRightActions = ({ data, handleDelete, handleEdit }) => {
   return (
@@ -34,10 +32,35 @@ const SwipeableRightActions = ({ data, handleDelete, handleEdit }) => {
   );
 };
 
-function SwipeableList({ data, handleShow, handleDelete, handleEdit }) {
+function SwipeableList({
+  data,
+  handleShow,
+  handleDelete,
+  handleEdit,
+  onOpen,
+  onClose,
+}) {
+  const rowRef = useRef();
+  let isOpened;
+
+  const onSwipeOpen = () => {
+    if (!isOpened) {
+      isOpened = true;
+      onOpen(rowRef);
+    }
+  };
+  const onSwipeClose = () => {
+    if (isOpened) {
+      isOpened = false;
+      onClose(rowRef);
+    }
+  };
   return (
     <View style={styles.containerCardRemember}>
       <Swipeable
+        ref={rowRef}
+        onSwipeableOpen={onSwipeOpen}
+        onSwipeableClose={onSwipeClose}
         renderRightActions={id => (
           <SwipeableRightActions
             data={data}
@@ -49,14 +72,18 @@ function SwipeableList({ data, handleShow, handleDelete, handleEdit }) {
           style={styles.cardRemember}
           onPress={() => handleShow(data.id)}>
           <View style={styles.iconCard}>
-            <FishBowlOutline width={50} height={50} fill={'#0055AA'} />
+            <MaterialCommunityIcons
+              name="fishbowl-outline"
+              color="#0055AA"
+              size={50}
+            />
           </View>
           <View style={styles.textsCard}>
             <Text style={styles.titleCard}>{data.name}</Text>
 
             {data.length && data.height && data.width && (
               <Text style={styles.dataCard}>
-                {data.length * data.height * data.width} litros
+                {(data.length * data.height * data.width) / 1000} litros
               </Text>
             )}
             {/* {data.time && (

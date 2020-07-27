@@ -23,6 +23,20 @@ const AquariumIndex = props => {
   const [aquariums, setAquariums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  let swipedCardRef = null;
+
+  const onOpen = ref => {
+    if (swipedCardRef) {
+      swipedCardRef.current.close();
+    }
+    swipedCardRef = ref;
+  };
+  const onClose = ref => {
+    if (ref === swipedCardRef) {
+      swipedCardRef = null;
+    }
+  };
+
   async function deleteAquarium(aquarium) {
     setIsLoading(true);
     const realm = await getRealm();
@@ -106,7 +120,6 @@ const AquariumIndex = props => {
     navigation.navigate('AquariumShow', { aquariumId: id });
   }
   function handleNavigateToCreate() {
-    // props.navigation.navigate('AquariumCreate', { aquariumId: 0 });
     navigation.navigate('AquariumCreate', { aquariumId: 0 });
   }
 
@@ -129,6 +142,8 @@ const AquariumIndex = props => {
                   handleDelete={handleDeleteAquarium}
                   handleEdit={handleEditAquarium}
                   handleShow={handleNavigateToShow}
+                  onOpen={onOpen}
+                  onClose={onClose}
                 />
               )}
               showsVerticalScrollIndicator={false}
