@@ -83,12 +83,10 @@ function SwipeableList({
 
             {data.length && data.height && data.width && (
               <Text style={styles.dataCard}>
-                {(data.length * data.height * data.width) / 1000} litros
+                {Math.round((data.length * data.height * data.width) / 1000)}{' '}
+                litros
               </Text>
             )}
-            {/* {data.time && (
-              <Text style={styles.dataCard}>20:00 - 11 de junho.</Text>
-            )} */}
           </View>
         </RectButton>
       </Swipeable>

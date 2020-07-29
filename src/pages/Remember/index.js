@@ -1,139 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 
+import SwipeableList from '../../components/swipeableList';
+import Loading from '../../components/loading';
+
 const RememberIndex = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigation = useNavigation();
 
-  function handleNavigateBack() {
-    navigation.goBack();
+  function handleNavigateToCreate() {
+    navigation.navigate('RememberCreate', { rememberId: 0 });
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
-      <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
-        <View style={styles.container}>
-          <View style={styles.containerHeader}>
-            <View style={{ justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, flexWrap: 'wrap' }}>
-                <TouchableOpacity
-                  style={styles.buttonBack}
-                  onPress={handleNavigateBack}
-                  activeOpacity={0.6}>
-                  <MaterialCommunityIcons
-                    name="chevron-left"
-                    size={24}
-                    color="#0055AA"
-                  />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.title}>Lembretes</Text>
-            </View>
-
-            <Image
-              style={styles.imageHeader}
-              source={require('../../assets/images/clock-remember.png')}
-            />
-          </View>
-        </View>
-        <View style={styles.containerContent}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingVertical: 20,
-            }}>
-            <View style={styles.cardRemember}>
-              <View style={styles.iconCard}>
-                <MaterialCommunityIcons name="leaf" size={50} color="#0055AA" />
-              </View>
-              <View style={styles.textsCard}>
-                <Text style={styles.titleCard}>Colocar Fertilizante</Text>
-                <Text style={styles.descriptionCard}>Aquário Principal</Text>
-                <View style={styles.detailsCard}>
-                  <Text style={styles.dataCard}>2 ml.</Text>
-                  <Text style={styles.dataCard}>20:00 - 11 de junho.</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.cardRemember}>
-              <View style={styles.iconCard}>
-                <MaterialCommunityIcons
-                  name="flask-outline"
-                  size={50}
-                  color="#0055AA"
-                />
-              </View>
-              <View style={styles.textsCard}>
-                <Text style={styles.titleCard}>Colocar remedio</Text>
-                <Text style={styles.descriptionCard}>Aquário Hospital</Text>
-                <View style={styles.detailsCard}>
-                  <Text style={styles.dataCard}>2 gotas.</Text>
-                  <Text style={styles.dataCard}>20:00 - 11 de junho.</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.cardRemember}>
-              <View style={styles.iconCard}>
-                <MaterialCommunityIcons
-                  name="food-variant"
-                  size={50}
-                  color="#0055AA"
-                />
-              </View>
-              <View style={styles.textsCard}>
-                <Text style={styles.titleCard}>Colocar suplemento</Text>
-                <Text style={styles.descriptionCard}>Aquário Principal</Text>
-                <View style={styles.detailsCard}>
-                  <Text style={styles.dataCard}>2 gr.</Text>
-                  <Text style={styles.dataCard}>20:00 - 11 de junho.</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.cardRemember}>
-              <View style={styles.iconCard}>
-                <MaterialCommunityIcons
-                  name="water"
-                  size={50}
-                  color="#0055AA"
-                />
-              </View>
-              <View style={styles.textsCard}>
-                <Text style={styles.titleCard}>Fazer TPA</Text>
-                <Text style={styles.descriptionCard}>Aquário Principal</Text>
-                <View style={styles.detailsCard}>
-                  <Text style={styles.dataCard}>20 L.</Text>
-                  <Text style={styles.dataCard}>20:00 - 11 de junho.</Text>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
+    <>
+      <View style={styles.containerContent}>
+        {/* <Loading show={isLoading} color={'#0055AA'} size={'large'} /> */}
+        <View />
       </View>
       <TouchableOpacity
         style={styles.floattingButton}
-        onPress={() => {}}
+        onPress={handleNavigateToCreate}
         activeOpacity={0.6}>
         <MaterialCommunityIcons name="plus" size={44} color="#FFF" />
       </TouchableOpacity>
-    </SafeAreaView>
+    </>
   );
 };
 const styles = StyleSheet.create({

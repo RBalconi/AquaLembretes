@@ -40,22 +40,29 @@ const AquariumShow = () => {
         <View style={styles.measuresContainer}>
           <View>
             <Text style={styles.measuresTitle}>Comprimento</Text>
-            <Text style={styles.measuresDetail}>{data.length} cm</Text>
+            <Text style={styles.measuresDetail}>
+              {Math.round(data.length)} cm
+            </Text>
           </View>
           <View>
             <Text style={styles.measuresTitle}>Largura</Text>
-            <Text style={styles.measuresDetail}>{data.width} cm</Text>
+            <Text style={styles.measuresDetail}>
+              {Math.round(data.width)} cm
+            </Text>
           </View>
           <View>
             <Text style={styles.measuresTitle}>Altura</Text>
-            <Text style={styles.measuresDetail}>{data.height} cm</Text>
+            <Text style={styles.measuresDetail}>
+              {Math.round(data.height)} cm
+            </Text>
           </View>
         </View>
         <View style={styles.measuresContainer}>
           <View>
             <Text style={styles.measuresTitle}>Litragem</Text>
             <Text style={styles.measuresDetail}>
-              {(data.length * data.height * data.width) / 1000} Litros
+              {Math.round((data.length * data.height * data.width) / 1000)}{' '}
+              Litros
             </Text>
           </View>
         </View>
