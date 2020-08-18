@@ -1,37 +1,214 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   TextInput,
   StyleSheet,
   Keyboard,
   ToastAndroid,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import PickerSelect from 'react-native-picker-select';
+import moment from 'moment';
+import CheckBox from '@react-native-community/checkbox';
+
+import getRealm from '../../services/realm';
+import RadioButtonGroup from '../../components/radioButtonGroup';
+import InputNumber from '../../components/inputNumber';
+import CustomModal from '../../components/customModal';
 
 const RememberCreate = () => {
-  const [date, setDate] = useState();
+  const [data, setData] = useState({
+    id: '',
+    name: '',
+    date: '',
+    time: '',
+    repeat: '', // notRepeat - everyDay - dayBreak 2 - (specificDays) monday, wednesday, friday, sunday
+    aquarium: '',
+    category: '',
+    quantity: 0,
+    unity: '',
+  });
+
+  const [radioButtonRepeat, setRadioButtonRepeat] = useState('');
+  const [specificDay, setSpecificDay] = useState([
+    { id: 'sunday', value: 'Domingo.', checked: false },
+    { id: 'monday', value: 'Segunda-feira.', checked: false },
+    { id: 'tuesday', value: 'Terça-feira.', checked: false },
+    { id: 'wednesday', value: 'Quarta-feira.', checked: false },
+    { id: 'thursday', value: 'Quinta-feira.', checked: false },
+    { id: 'friday', value: 'Sexta-feira.', checked: false },
+    { id: 'saturday', value: 'Sábado.', checked: false },
+  ]);
+
+  const [aquariumSelect, setAquariumSelect] = useState({});
+  const [aquariumsSelect, setAquariumsSelect] = useState({
+    options: [{ label: '', value: '' }],
+  });
+
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [time, setTime] = useState();
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  const [modalSpecificDayVisible, setModalSpecificDayVisible] = useState(false);
+  const [modalRangeDaysVisible, setModalRangeDaysVisible] = useState(false);
+
+  const listRememberDate = [
+    { id: 'notRepeat', text: 'Não repetir' },
+    { id: 'everyDay', text: 'Todos os dias' },
+    { id: 'dayBreak', text: 'Intervalo de dias', hasModal: true },
+    { id: 'specificDay', text: 'Dias especifícos da semana', hasModal: true },
+  ];
+
   const onChangeDate = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setDate(currentDate);
+    const currentDate = selectedDate || data.date;
+    setData({ ...data, date: currentDate });
     setShowDatePicker(false);
   };
 
   const onChangeTime = (event, selectedTime) => {
-    const currentTime = selectedTime || time;
-    setTime(currentTime);
+    const currentTime = selectedTime || data.time;
+    setData({ ...data, time: currentTime });
     setShowTimePicker(false);
   };
+
+  useEffect(() => {
+    async function setAquariumsRealm() {
+      const realm = await getRealm();
+      const allAquariums = realm
+        .objects('Aquarium')
+        .sorted('name', false)
+        .map(aquarium => {
+          return {
+            label: aquarium.name,
+            value: aquarium.id,
+          };
+        });
+      setAquariumsSelect({ ...allAquariums, options: allAquariums });
+    }
+    setAquariumsRealm();
+  }, []);
+
+  async function loadAquarium(id) {
+    const realm = await getRealm();
+    const loadedAquarium = realm.objectForPrimaryKey('Aquarium', id);
+    return loadedAquarium;
+  }
+
+  async function saveRemember() {
+    const realm = await getRealm();
+
+    // if (!data.id) {
+    //   const lastRemember = realm.objects('Remember').sorted('id', true)[0];
+    //   const highestId = lastRemember == null ? 0 : lastRemember.id;
+    //   const newId = highestId == null ? 1 : highestId + 1;
+    //   data.id = newId;
+    //   setData({ data });
+    // }
+
+    chooseRadioButton();
+    // console.log(data);
+
+    // const aquariumObj = await loadAquarium(aquariumSelect);
+    // data.aquarium = aquariumObj;
+    // setData({ data });
+
+    // realm.write(() => {
+    //   realm.create(
+    //     'Remember',
+    //     {
+    //       id: data.id,
+    //       name: data.name,
+    //       date: data.date,
+    //       time: data.time,
+    //       repeat: data.repeat,
+    //       aquarium: data.aquarium.aquarium,
+    //       category: data.category,
+    //       quantity: data.quantity,
+    //       unity: data.unity,
+    //     },
+    //     'modified',
+    //   );
+    // });
+  }
+
+  function handleAddRemember() {
+    try {
+      saveRemember();
+      setData({
+        id: '',
+        name: '',
+        date: '',
+        time: '',
+        repeat: '',
+        aquarium: '',
+        category: '',
+        quantity: 0,
+        unity: '',
+      });
+      setAquariumSelect('');
+      // console.log('clear ' + JSON.stringify(data, null, 2));
+      ToastAndroid.showWithGravityAndOffset(
+        'Salvo com sucesso!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      Keyboard.dismiss();
+    } catch (error) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Ocorreu um erro!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
+  }
+
+  function openModal(id) {
+    switch (id) {
+      case 'dayBreak':
+        setModalRangeDaysVisible(true);
+        break;
+      case 'specificDay':
+        setModalSpecificDayVisible(true);
+        break;
+    }
+  }
+
+  function chooseRadioButton() {
+    switch (radioButtonRepeat) {
+      case 'notRepeat':
+        setData({ ...data, repeat: 'notRepeat' });
+        break;
+      case 'everyDay':
+        setData({ ...data, repeat: 'everyDay' });
+        break;
+      case 'dayBreak':
+        // setData({ ...data, repeat: 'everyDay' });
+        break;
+      case 'specificDay':
+        const trueSpecificDay = specificDay.filter(day => day.checked === true);
+        const stringDays = trueSpecificDay.map(item => item.id);
+        setData({ ...data, repeat: stringDays.join() });
+        break;
+    }
+  }
+
+  function handleCheckBox(obj) {
+    setSpecificDay(
+      specificDay.map(item =>
+        item.id === obj.id ? { ...item, checked: !item.checked } : item,
+      ),
+    );
+  }
 
   return (
     <>
@@ -39,7 +216,9 @@ const RememberCreate = () => {
         <TextInput
           style={styles.input}
           placeholder="Nome do lembrete"
-          returnKeyType={'next'}
+          returnKeyType="next"
+          value={data.name}
+          onChangeText={text => setData({ ...data, name: text })}
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <TouchableWithoutFeedback
@@ -48,11 +227,11 @@ const RememberCreate = () => {
             }}>
             <View style={styles.containerIconInputText}>
               <TextInput
-                // editable={false}
+                editable={false}
                 style={styles.inputIcon}
                 placeholder="Data"
-                returnKeyType={'next'}
-                value={date?.toString()}
+                returnKeyType="next"
+                value={data.date ? moment(data.date).format('DD/MM/YYYY') : ''}
               />
               <MaterialCommunityIcons
                 style={styles.iconInputText}
@@ -78,11 +257,11 @@ const RememberCreate = () => {
             }}>
             <View style={[styles.containerIconInputText, { marginLeft: 20 }]}>
               <TextInput
-                // editable={false}
+                editable={false}
                 style={styles.inputIcon}
                 placeholder="Hora"
-                returnKeyType={'next'}
-                value={time?.toString()}
+                returnKeyType="next"
+                value={data.time ? moment(data.time).format('HH:mm') : ''}
               />
               <MaterialCommunityIcons
                 style={styles.iconInputText}
@@ -102,45 +281,77 @@ const RememberCreate = () => {
             </View>
           </TouchableWithoutFeedback>
         </View>
-        <PickerSelect
-          style={pickerSelectStyles}
-          onValueChange={value => console.log(value)}
-          useNativeAndroidPickerStyle={false}
-          placeholder={{
-            label: 'Repetir a cada',
-            value: null,
-            color: '#AAAABB',
+
+        <RadioButtonGroup
+          data={listRememberDate}
+          title="Repetir a cada"
+          openModal={id => {
+            openModal(id);
           }}
-          items={[
-            { label: '30 em 30 dias', value: '30' },
-            { label: '15 em 15 dias', value: '15' },
-            { label: '7 em 7 dias', value: '5' },
-            { label: 'Todo dia', value: '1' },
-            { label: 'Não repetir', value: '0' },
-          ]}
-          Icon={() => {
-            return (
-              <MaterialCommunityIcons
-                name="chevron-down"
-                color="#AAAABB"
-                size={28}
-              />
-            );
+          onChoose={option => {
+            setRadioButtonRepeat(option);
           }}
         />
+
+        {modalSpecificDayVisible && (
+          <CustomModal
+            title="Escolha os dias"
+            onClose={() => {
+              setModalSpecificDayVisible(false);
+            }}>
+            {specificDay.map(day => {
+              return (
+                <TouchableOpacity
+                  key={day.id}
+                  style={styles.checkboxContainer}
+                  activeOpacity={0.6}
+                  onPress={() => {
+                    handleCheckBox(day);
+                  }}>
+                  <>
+                    <CheckBox
+                      value={day.checked}
+                      onValueChange={() => {
+                        handleCheckBox(day);
+                      }}
+                      style={styles.checkbox}
+                    />
+                    <Text style={styles.checkboxText}>{day.value}</Text>
+                  </>
+                </TouchableOpacity>
+              );
+            })}
+          </CustomModal>
+        )}
+
+        {modalRangeDaysVisible && (
+          <CustomModal
+            title="Escolha o intervalo de dias"
+            onClose={() => {
+              setModalRangeDaysVisible(false);
+            }}>
+            <View style={{ flexDirection: 'row' }}>
+              <InputNumber
+                value={data.quantity?.toString()}
+                onChangeText={text => {
+                  setData({ ...data, quantity: text });
+                }}
+              />
+            </View>
+          </CustomModal>
+        )}
+
         <PickerSelect
           style={pickerSelectStyles}
-          onValueChange={value => console.log(value)}
+          value={aquariumSelect}
+          onValueChange={value => setAquariumSelect(value)}
           useNativeAndroidPickerStyle={false}
           placeholder={{
             label: 'Selecione o Aquário',
-            value: null,
+            value: '',
             color: '#AAAABB',
           }}
-          items={[
-            { label: 'Aquario 1', value: '1' },
-            { label: 'Aquario 2', value: '2' },
-          ]}
+          items={aquariumsSelect.options}
           Icon={() => {
             return (
               <MaterialCommunityIcons
@@ -153,7 +364,8 @@ const RememberCreate = () => {
         />
         <PickerSelect
           style={pickerSelectStyles}
-          onValueChange={value => console.log(value)}
+          value={data.category}
+          onValueChange={value => setData({ ...data, category: value })}
           useNativeAndroidPickerStyle={false}
           placeholder={{
             label: 'Selecione a categoria',
@@ -177,35 +389,13 @@ const RememberCreate = () => {
           }}
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
-          <View
-            style={[
-              styles.containerIconInputText,
-              { flex: 1, flexDirection: 'row', alignItems: 'center' },
-            ]}>
-            <TouchableWithoutFeedback>
-              <MaterialCommunityIcons
-                style={styles.iconInputText}
-                name="minus"
-                color="#AAAABB"
-                size={28}
-              />
-            </TouchableWithoutFeedback>
-            <TextInput
-              style={{ flex: 1, fontSize: 16 }}
-              textAlign={'center'}
-              keyboardType="numeric"
-              placeholder="0"
-              returnKeyType={'next'}
-            />
-            <TouchableWithoutFeedback>
-              <MaterialCommunityIcons
-                style={styles.iconInputText}
-                name="plus"
-                color="#AAAABB"
-                size={28}
-              />
-            </TouchableWithoutFeedback>
-          </View>
+          <InputNumber
+            value={data.quantity?.toString()}
+            onChangeText={text => {
+              setData({ ...data, quantity: text });
+            }}
+          />
+
           <PickerSelect
             style={{
               ...pickerSelectStyles,
@@ -221,7 +411,8 @@ const RememberCreate = () => {
                 fontSize: 16,
               },
             }}
-            onValueChange={value => console.log(value)}
+            value={data.unity}
+            onValueChange={value => setData({ ...data, unity: value })}
             useNativeAndroidPickerStyle={false}
             placeholder={{
               label: 'Un. de medida',
@@ -246,7 +437,7 @@ const RememberCreate = () => {
             }}
           />
         </View>
-        <RectButton style={styles.button} onPress={() => {}}>
+        <RectButton style={styles.button} onPress={handleAddRemember}>
           <View style={styles.buttonIcon}>
             <MaterialCommunityIcons name="arrow-right" color="#FFF" size={24} />
           </View>
@@ -265,18 +456,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     fontSize: 16,
   },
-
   containerIconInputText: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
     height: 60,
     borderRadius: 8,
     backgroundColor: '#fff',
   },
   iconInputText: {
-    padding: 20,
+    paddingRight: 20,
   },
   inputIcon: {
     flex: 1,
@@ -284,6 +475,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     fontSize: 16,
+  },
+
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignContent: 'center',
+  },
+  checkbox: {
+    alignSelf: 'center',
+  },
+  checkboxText: {
+    alignSelf: 'center',
   },
 
   datePicker: {
@@ -304,7 +506,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
-
   buttonIcon: {
     height: 60,
     width: 60,
@@ -314,7 +515,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   buttonText: {
     flex: 1,
     justifyContent: 'center',

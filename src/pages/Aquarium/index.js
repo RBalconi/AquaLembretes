@@ -144,7 +144,17 @@ const AquariumIndex = props => {
                   handleShow={handleNavigateToShow}
                   onOpen={onOpen}
                   onClose={onClose}
-                />
+                  icon="fishbowl-outline">
+                  <View style={styles.textsCard}>
+                    <Text style={styles.titleCard}>{item.name}</Text>
+                    <Text style={styles.dataCard}>
+                      {Math.round(
+                        (item.length * item.height * item.width) / 1000,
+                      )}{' '}
+                      litros
+                    </Text>
+                  </View>
+                </SwipeableList>
               )}
               showsVerticalScrollIndicator={false}
             />
@@ -172,7 +182,22 @@ const styles = StyleSheet.create({
     borderTopStartRadius: 40,
     paddingBottom: 0,
   },
+  textsCard: {
+    flex: 1,
+    alignContent: 'space-between',
+  },
+  dataCard: {
+    color: '#334455',
+    fontFamily: 'Roboto-Light',
+    fontSize: 14,
+  },
 
+  titleCard: {
+    color: '#334455',
+    fontFamily: 'Roboto-Bold',
+    fontSize: 20,
+    paddingBottom: 4,
+  },
   floattingButton: {
     position: 'absolute',
     width: 57,

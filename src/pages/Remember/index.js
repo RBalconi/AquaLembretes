@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,17 +6,120 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
+  ToastAndroid,
+  FlatList,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import moment from 'moment';
 
+import getRealm from '../../services/realm';
 import SwipeableList from '../../components/swipeableList';
 import Loading from '../../components/loading';
 
 const RememberIndex = () => {
+  const [remember, setRemember] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const navigation = useNavigation();
+
+  let swipedCardRef = null;
+
+  const onOpen = ref => {
+    if (swipedCardRef) {
+      swipedCardRef.current.close();
+    }
+    swipedCardRef = ref;
+  };
+  const onClose = ref => {
+    if (ref === swipedCardRef) {
+      swipedCardRef = null;
+    }
+  };
+
+  function chooseIcon(category) {
+    switch (category) {
+      case 'fertilizer':
+        return 'leaf';
+      case 'medication':
+        return 'flask-empty-plus';
+      case 'supplementation':
+        return 'food-variant';
+      case 'tpa':
+        return 'water';
+    }
+  }
+
+  async function deleteRemember(rememberData) {
+    setIsLoading(true);
+    const realm = await getRealm();
+    try {
+      const deletingRemember = realm
+        .objects('Remember')
+        .filtered(`id = '${rememberData.id}'`);
+
+      realm.write(() => {
+        realm.delete(deletingRemember);
+      });
+    } catch (error) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Ocorreu um erro ao excluir!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
+    setIsLoading(false);
+  }
+  function handleDeleteRemember(rememberData) {
+    Alert.alert(
+      'Excluir',
+      `Tem certeza que deseja excluir "${rememberData.name}"?`,
+      [
+        {
+          text: 'Sim',
+          onPress: () => {
+            deleteRemember(rememberData);
+          },
+        },
+        {
+          text: 'Talvez depois',
+          onPress: () => {},
+        },
+      ],
+    );
+  }
+
+  async function setRememberRealm() {
+    setIsLoading(true);
+    const realm = await getRealm();
+    const data = realm.objects('Remember').sorted('name', false);
+    setRemember(data);
+    setIsLoading(false);
+  }
+
+  async function removeListernerRefreshRemember() {
+    const realm = await getRealm();
+    realm.removeListener('change', () => {});
+  }
+
+  const startListenerRefreshRemember = useCallback(async () => {
+    const realm = await getRealm();
+    realm.addListener('change', () => setRememberRealm());
+  }, []);
+
+  useEffect(() => {
+    startListenerRefreshRemember();
+    return () => {
+      removeListernerRefreshRemember();
+    };
+  }, [startListenerRefreshRemember]);
+
+  useEffect(() => {
+    setRememberRealm();
+  }, []);
 
   function handleNavigateToCreate() {
     navigation.navigate('RememberCreate', { rememberId: 0 });
@@ -25,8 +128,46 @@ const RememberIndex = () => {
   return (
     <>
       <View style={styles.containerContent}>
-        {/* <Loading show={isLoading} color={'#0055AA'} size={'large'} /> */}
-        <View />
+        <Loading show={isLoading} color={'#0055AA'} size={'large'} />
+        <View>
+          {remember.length <= 0 && isLoading !== true ? (
+            <Text style={{ color: '#000', alignSelf: 'center' }}>
+              Nenhum lembrete cadastrado.
+            </Text>
+          ) : (
+            <FlatList
+              data={remember}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => (
+                <SwipeableList
+                  data={item}
+                  icon={chooseIcon(item.category)}
+                  handleDelete={handleDeleteRemember}
+                  // handleEdit={handleEditAquarium}
+                  onOpen={onOpen}
+                  onClose={onClose}>
+                  <View style={styles.textsCard}>
+                    <Text style={styles.titleCard}>{item.name}</Text>
+                    <Text style={styles.dataCard}>
+                      Aquario XXXXXXXXX{item.aquarium}
+                    </Text>
+                    <View style={styles.measures}>
+                      <Text style={styles.info}>
+                        {item.quantity + ' ' + item.unity}.
+                      </Text>
+                      <Text style={styles.info}>
+                        {moment(item.time).format('HH:mm') +
+                          ' - ' +
+                          moment(item.date).format('DD [de] MMMM')}
+                      </Text>
+                    </View>
+                  </View>
+                </SwipeableList>
+              )}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
       </View>
       <TouchableOpacity
         style={styles.floattingButton}
@@ -42,80 +183,46 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingTop: 20 + StatusBar.currentHeight,
   },
-  buttonBack: {
-    flexWrap: 'wrap',
-    padding: 6,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-  },
-
-  containerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    minHeight: 180,
-  },
-  title: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Ubuntu-Medium',
-    marginBottom: 40,
-  },
-  imageHeader: {},
 
   containerContent: {
     flex: 1,
     backgroundColor: '#f0f0f5',
     borderTopStartRadius: 40,
-    padding: 20,
     paddingBottom: 0,
   },
-
-  cardRemember: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+  textsCard: {
+    flex: 1,
+    alignContent: 'space-between',
   },
-
   titleCard: {
     color: '#334455',
     fontFamily: 'Roboto-Bold',
     fontSize: 20,
     paddingBottom: 4,
   },
-  descriptionCard: {
-    color: '#7C8893',
-    fontFamily: 'Roboto-Medium',
-    fontSize: 18,
-    paddingBottom: 5,
-  },
-  iconCard: {
-    paddingLeft: 10,
-    paddingRight: 30,
-    alignSelf: 'center',
-  },
-  textsCard: {
-    flex: 1,
-    alignContent: 'space-between',
-  },
-  detailsCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   dataCard: {
     color: '#334455',
     fontFamily: 'Roboto-Light',
+    fontSize: 16,
+  },
+  measures: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  info: {
+    color: '#3A4E5F',
+    fontFamily: 'Roboto-Medium',
     fontSize: 14,
   },
+
   floattingButton: {
     position: 'absolute',
     width: 57,
     height: 57,
     alignItems: 'center',
     justifyContent: 'center',
-    right: 20,
+    right: 0,
     bottom: 20,
     backgroundColor: '#0055AA',
     borderRadius: 20,

@@ -39,6 +39,8 @@ function SwipeableList({
   handleEdit,
   onOpen,
   onClose,
+  icon,
+  children,
 }) {
   const rowRef = useRef();
   let isOpened;
@@ -70,24 +72,11 @@ function SwipeableList({
         )}>
         <RectButton
           style={styles.cardRemember}
-          onPress={() => handleShow(data.id)}>
+          onPress={() => handleShow && handleShow(data.id)}>
           <View style={styles.iconCard}>
-            <MaterialCommunityIcons
-              name="fishbowl-outline"
-              color="#0055AA"
-              size={50}
-            />
+            <MaterialCommunityIcons name={icon} color="#0055AA" size={50} />
           </View>
-          <View style={styles.textsCard}>
-            <Text style={styles.titleCard}>{data.name}</Text>
-
-            {data.length && data.height && data.width && (
-              <Text style={styles.dataCard}>
-                {Math.round((data.length * data.height * data.width) / 1000)}{' '}
-                litros
-              </Text>
-            )}
-          </View>
+          {children}
         </RectButton>
       </Swipeable>
     </View>
@@ -109,30 +98,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-  titleCard: {
-    color: '#334455',
-    fontFamily: 'Roboto-Bold',
-    fontSize: 20,
-    paddingBottom: 4,
-  },
   iconCard: {
     paddingLeft: 10,
     paddingRight: 30,
     alignSelf: 'center',
   },
-  textsCard: {
-    flex: 1,
-    alignContent: 'space-between',
-  },
+
   detailsCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  dataCard: {
-    color: '#334455',
-    fontFamily: 'Roboto-Light',
-    fontSize: 14,
-  },
+
   containerSwipeable: {
     flexDirection: 'row',
     alignItems: 'center',
