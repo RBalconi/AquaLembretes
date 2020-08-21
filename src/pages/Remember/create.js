@@ -29,14 +29,17 @@ const RememberCreate = () => {
     name: '',
     date: '',
     time: '',
-    repeat: '', // notRepeat - everyDay - dayBreak 2 - (specificDays) monday, wednesday, friday, sunday
+    repeat: '', // notRepeat - everyDay - rangeDay 2 - (specificDays) monday, wednesday, friday, sunday
     aquarium: '',
     category: '',
     quantity: 0,
     unity: '',
   });
+  const [rangeDay, setRangeDay] = useState(0);
+  const [quantity, setQuantity] = useState(0);
 
-  const [radioButtonRepeat, setRadioButtonRepeat] = useState('');
+  const [radioButtonGroupValue, setRadioButtonGroupValue] = useState();
+
   const [specificDay, setSpecificDay] = useState([
     { id: 'sunday', value: 'Domingo.', checked: false },
     { id: 'monday', value: 'Segunda-feira.', checked: false },
@@ -61,7 +64,7 @@ const RememberCreate = () => {
   const listRememberDate = [
     { id: 'notRepeat', text: 'Não repetir' },
     { id: 'everyDay', text: 'Todos os dias' },
-    { id: 'dayBreak', text: 'Intervalo de dias', hasModal: true },
+    { id: 'rangeDay', text: 'Intervalo de dias', hasModal: true },
     { id: 'specificDay', text: 'Dias especifícos da semana', hasModal: true },
   ];
 
@@ -103,43 +106,45 @@ const RememberCreate = () => {
   async function saveRemember() {
     const realm = await getRealm();
 
-    // if (!data.id) {
-    //   const lastRemember = realm.objects('Remember').sorted('id', true)[0];
-    //   const highestId = lastRemember == null ? 0 : lastRemember.id;
-    //   const newId = highestId == null ? 1 : highestId + 1;
-    //   data.id = newId;
-    //   setData({ data });
-    // }
+    if (!data.id) {
+      const lastRemember = realm.objects('Remember').sorted('id', true)[0];
+      const highestId = lastRemember == null ? 0 : lastRemember.id;
+      const newId = highestId == null ? 1 : highestId + 1;
+      data.id = newId;
+      setData({ data });
+    }
 
-    chooseRadioButton();
-    // console.log(data);
+    console.log(data);
 
-    // const aquariumObj = await loadAquarium(aquariumSelect);
-    // data.aquarium = aquariumObj;
-    // setData({ data });
+    const aquariumObj = await loadAquarium(aquariumSelect);
+    data.aquarium = aquariumObj;
+    setData({ data });
 
-    // realm.write(() => {
-    //   realm.create(
-    //     'Remember',
-    //     {
-    //       id: data.id,
-    //       name: data.name,
-    //       date: data.date,
-    //       time: data.time,
-    //       repeat: data.repeat,
-    //       aquarium: data.aquarium.aquarium,
-    //       category: data.category,
-    //       quantity: data.quantity,
-    //       unity: data.unity,
-    //     },
-    //     'modified',
-    //   );
-    // });
+    realm.write(() => {
+      realm.create(
+        'Remember',
+        {
+          id: data.id,
+          name: data.name,
+          date: data.date,
+          time: data.time,
+          repeat: data.repeat,
+          aquarium: data.aquarium.aquarium,
+          category: data.category,
+          quantity: parseFloat(data.quantity),
+          unity: data.unity,
+        },
+        'modified',
+      );
+    });
   }
 
   function handleAddRemember() {
     try {
+      console.log('clear-before ' + JSON.stringify(data, null, 2));
+
       saveRemember();
+
       setData({
         id: '',
         name: '',
@@ -151,8 +156,16 @@ const RememberCreate = () => {
         quantity: 0,
         unity: '',
       });
+
+      setAllCheckboxesDateFalse();
+
+      // setQuantity(0);
+      setRangeDay(0);
+      setRadioButtonGroupValue('');
       setAquariumSelect('');
-      // console.log('clear ' + JSON.stringify(data, null, 2));
+
+      console.log('clear-after ' + JSON.stringify(data, null, 2));
+
       ToastAndroid.showWithGravityAndOffset(
         'Salvo com sucesso!',
         ToastAndroid.SHORT,
@@ -172,41 +185,51 @@ const RememberCreate = () => {
     }
   }
 
-  function openModal(id) {
-    switch (id) {
-      case 'dayBreak':
-        setModalRangeDaysVisible(true);
-        break;
-      case 'specificDay':
-        setModalSpecificDayVisible(true);
-        break;
-    }
+  function setAllCheckboxesDateFalse() {
+    setSpecificDay(
+      specificDay.map(item => {
+        return item.checked === true ? { ...item, checked: false } : item;
+      }),
+    );
   }
 
-  function chooseRadioButton() {
-    switch (radioButtonRepeat) {
-      case 'notRepeat':
-        setData({ ...data, repeat: 'notRepeat' });
-        break;
-      case 'everyDay':
-        setData({ ...data, repeat: 'everyDay' });
-        break;
-      case 'dayBreak':
-        // setData({ ...data, repeat: 'everyDay' });
-        break;
-      case 'specificDay':
-        const trueSpecificDay = specificDay.filter(day => day.checked === true);
-        const stringDays = trueSpecificDay.map(item => item.id);
-        setData({ ...data, repeat: stringDays.join() });
-        break;
+  function onCloseCancelSpecificDayModal() {
+    setAllCheckboxesDateFalse();
+    setModalSpecificDayVisible(false);
+  }
+  function onCloseSucessSpecificDayModal() {
+    const trueSpecificDay = specificDay.filter(day => day.checked === true);
+    const stringDays = trueSpecificDay.map(item => item.id).join();
+    data.repeat = stringDays;
+    setData(data);
+
+    setModalSpecificDayVisible(false);
+  }
+
+  function onCloseSucessRangeDaysModal() {
+    data.repeat = rangeDay.toString();
+    setData(data);
+    setModalRangeDaysVisible(false);
+  }
+
+  function handleChooseRadioButton(option) {
+    if (option === 'notRepeat' || option === 'everyDay') {
+      data.repeat = option;
+      setData(data);
+    }
+    if (option === 'rangeDay') {
+      setModalRangeDaysVisible(true);
+    }
+    if (option === 'specificDay') {
+      setModalSpecificDayVisible(true);
     }
   }
 
   function handleCheckBox(obj) {
     setSpecificDay(
-      specificDay.map(item =>
-        item.id === obj.id ? { ...item, checked: !item.checked } : item,
-      ),
+      specificDay.map(item => {
+        return item.id === obj.id ? { ...item, checked: !item.checked } : item;
+      }),
     );
   }
 
@@ -284,20 +307,22 @@ const RememberCreate = () => {
 
         <RadioButtonGroup
           data={listRememberDate}
-          title="Repetir a cada"
-          openModal={id => {
-            openModal(id);
-          }}
-          onChoose={option => {
-            setRadioButtonRepeat(option);
+          title="Intervalo de repetição"
+          value={radioButtonGroupValue}
+          onChange={option => {
+            handleChooseRadioButton(option);
+            setRadioButtonGroupValue(option);
           }}
         />
 
         {modalSpecificDayVisible && (
           <CustomModal
             title="Escolha os dias"
-            onClose={() => {
-              setModalSpecificDayVisible(false);
+            onCloseSucess={() => {
+              onCloseSucessSpecificDayModal();
+            }}
+            onCloseCancel={() => {
+              onCloseCancelSpecificDayModal();
             }}>
             {specificDay.map(day => {
               return (
@@ -314,7 +339,6 @@ const RememberCreate = () => {
                       onValueChange={() => {
                         handleCheckBox(day);
                       }}
-                      style={styles.checkbox}
                     />
                     <Text style={styles.checkboxText}>{day.value}</Text>
                   </>
@@ -327,14 +351,17 @@ const RememberCreate = () => {
         {modalRangeDaysVisible && (
           <CustomModal
             title="Escolha o intervalo de dias"
-            onClose={() => {
+            onCloseSucess={() => {
+              onCloseSucessRangeDaysModal();
+            }}
+            onCloseCancel={() => {
               setModalRangeDaysVisible(false);
             }}>
             <View style={{ flexDirection: 'row' }}>
               <InputNumber
-                value={data.quantity?.toString()}
+                value={rangeDay.toString()}
                 onChangeText={text => {
-                  setData({ ...data, quantity: text });
+                  setRangeDay(text);
                 }}
               />
             </View>
@@ -390,7 +417,7 @@ const RememberCreate = () => {
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <InputNumber
-            value={data.quantity?.toString()}
+            value={data.quantity}
             onChangeText={text => {
               setData({ ...data, quantity: text });
             }}
@@ -480,9 +507,6 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignContent: 'center',
-  },
-  checkbox: {
-    alignSelf: 'center',
   },
   checkboxText: {
     alignSelf: 'center',

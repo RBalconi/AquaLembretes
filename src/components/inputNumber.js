@@ -7,24 +7,24 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-function InputNumber({ onChangeText = text => {}, value }) {
-  // console.log('----------------');
-  // console.log('value ' + value);
-
-  const [number, setNumber] = useState(parseFloat(value));
-  // console.log('number ' + number);
+function InputNumber({ onChangeText = () => {}, value, placeholder }) {
+  const [number, setNumber] = useState(value);
 
   function increase() {
     const numberAdded = number + 1;
-    setNumber(numberAdded);
+    setNumber(parseFloat(numberAdded));
     onChangeText(numberAdded);
   }
-
   function decrease() {
-    const numberSubtracted = number - 1;
-    setNumber(numberSubtracted);
-    onChangeText(numberSubtracted);
+    if (number <= 0) {
+      setNumber(0);
+    } else {
+      const numberSubtracted = number - 1;
+      setNumber(parseFloat(numberSubtracted));
+      onChangeText(numberSubtracted);
+    }
   }
+
   return (
     <View style={styles.containerNumberInput}>
       <TouchableWithoutFeedback
@@ -42,13 +42,12 @@ function InputNumber({ onChangeText = text => {}, value }) {
         style={styles.textInput}
         textAlign="center"
         keyboardType="numeric"
-        placeholder="Qnt"
+        placeholder={placeholder}
         returnKeyType="next"
-        // value={Number.isNaN(number) ? '0' : number?.toString()}
-        value={number?.toString()}
+        value={value?.toString()}
         onChangeText={text => {
-          onChangeText(parseFloat(text));
-          setNumber(parseFloat(text));
+          onChangeText(text);
+          text === '' ? setNumber(text) : setNumber(parseFloat(text));
         }}
       />
       <TouchableWithoutFeedback

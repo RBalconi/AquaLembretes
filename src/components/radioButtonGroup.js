@@ -1,40 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-function RadioButtonGroup({
-  data,
-  title,
-  openModal = id => {},
-  onChoose = option => {},
-}) {
-  const [value, setValue] = useState();
-
+function RadioButtonGroup({ data, title, onChange = () => {}, value }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.titleGroup}>{title}</Text>
       {data.map(item => {
         return (
-          <View style={styles.radioButton}>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              style={styles.radioCircle}
-              onPress={() => {
-                setValue(item.id);
-                openModal(item.id);
-                onChoose(item.id);
-              }}>
-              {value === item.id && <View style={styles.selectedRb} />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => {
-                setValue(item.id);
-                openModal(item.id);
-                onChoose(item.id);
-              }}>
-              <Text style={styles.radioText}>{item.text}</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            key={item.id}
+            style={styles.radioButtonContainer}
+            activeOpacity={0.6}
+            onPress={() => {
+              onChange(item.id);
+            }}>
+            <View style={styles.radioButtonCircle}>
+              {value === item.id && <View style={styles.radioButtonSelected} />}
+            </View>
+            <Text style={styles.radioButtonText}>{item.text}</Text>
+          </TouchableOpacity>
         );
       })}
     </View>
@@ -49,24 +33,24 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     marginBottom: 20,
   },
-  title: {
+  titleGroup: {
     fontSize: 16,
     color: '#9EA0A4',
     marginBottom: 10,
   },
-  radioButton: {
+  radioButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
-  radioText: {
+  radioButtonText: {
     marginRight: 35,
     fontSize: 16,
     color: '#9EA0A4',
     marginLeft: 4,
     marginBottom: 4,
   },
-  radioCircle: {
+  radioButtonCircle: {
     height: 20,
     width: 20,
     borderRadius: 100,
@@ -75,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectedRb: {
+  radioButtonSelected: {
     width: 10,
     height: 10,
     borderRadius: 20,

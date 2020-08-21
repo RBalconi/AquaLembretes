@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Modal, Text, TouchableOpacity } from 'react-native';
 
-function CustomModal({ title, children, onClose = () => {} }) {
+function CustomModal({
+  title,
+  children,
+  onCloseSucess = () => {},
+  onCloseCancel = () => {},
+}) {
   const [modalVisible, setModalVisible] = useState();
 
   return (
-    <Modal animationType="fade" visible={modalVisible} s>
+    <Modal animationType="fade" visible={modalVisible}>
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <Text style={styles.title}>{title}</Text>
+
           <View style={styles.childrenContainer}>{children}</View>
+
           <View style={styles.containerButton}>
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.button}
               onPress={() => {
-                onClose();
+                onCloseCancel();
               }}>
               <Text style={styles.buttonText}>Cancelar</Text>
             </TouchableOpacity>
@@ -23,7 +30,7 @@ function CustomModal({ title, children, onClose = () => {} }) {
               activeOpacity={0.6}
               style={styles.button}
               onPress={() => {
-                onClose();
+                onCloseSucess();
               }}>
               <Text style={styles.buttonText}>Definir</Text>
             </TouchableOpacity>
