@@ -7,17 +7,23 @@
         <item name="android:datePickerDialogTheme">@style/CalendarDatePickerDialog</item>
         <item name="android:timePickerDialogTheme">@style/ClockTimePickerDialog</item>
         <item name="android:buttonTint">#0055AA</item>
+
+        <item name="android:windowBackground">@drawable/background_splash</item>
+        <item name="android:statusBarColor">@color/primary</item>
     </style>
     
     <style name="CalendarDatePickerDialog" parent="Theme.AppCompat.Light.Dialog">
-        <item name="colorAccent">#0055AA</item>
+        <!-- <item name="colorAccent">#0055AA</item> -->
+        <item name="colorAccent">@color/darkBlue</item>
         <item name="android:textColor">#000</item>
         <item name="android:textColorPrimary">#000</item>
     </style>
 
     <style name="ClockTimePickerDialog" parent="Theme.AppCompat.Light.Dialog">
-        <item name="colorAccent">#0055AA</item>
+        <!-- <item name="colorAccent">#0055AA</item> -->
+        <item name="colorAccent">@color/darkBlue</item>
         <item name="android:textColorPrimary">#000</item>
     </style>
+
 
 </resources>
