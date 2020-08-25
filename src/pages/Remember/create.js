@@ -8,7 +8,6 @@ import {
   ToastAndroid,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RectButton } from 'react-native-gesture-handler';
@@ -17,13 +16,17 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import PickerSelect from 'react-native-picker-select';
 import moment from 'moment';
 import CheckBox from '@react-native-community/checkbox';
+import PushNotification from 'react-native-push-notification';
 
 import getRealm from '../../services/realm';
+import { NotificationConfigure } from '../../services/notification';
 import RadioButtonGroup from '../../components/radioButtonGroup';
 import InputNumber from '../../components/inputNumber';
 import CustomModal from '../../components/customModal';
 
 const RememberCreate = () => {
+  PushNotification.configure = NotificationConfigure;
+
   const [data, setData] = useState({
     id: '',
     name: '',
@@ -32,11 +35,10 @@ const RememberCreate = () => {
     repeat: '', // notRepeat - everyDay - rangeDay 2 - (specificDays) monday, wednesday, friday, sunday
     aquarium: '',
     category: '',
-    quantity: 0,
+    quantity: '',
     unity: '',
   });
   const [rangeDay, setRangeDay] = useState(0);
-  const [quantity, setQuantity] = useState(0);
 
   const [radioButtonGroupValue, setRadioButtonGroupValue] = useState();
 
@@ -68,17 +70,76 @@ const RememberCreate = () => {
     { id: 'specificDay', text: 'Dias especifícos da semana', hasModal: true },
   ];
 
-  const onChangeDate = (event, selectedDate) => {
+  function scheduleNotification(
+    id,
+    title,
+    message,
+    date,
+    time,
+    repeatType,
+    repeatTime,
+  ) {
+    const newDate = moment(date)
+      .subtract(moment(date).hour(), 'hour')
+      .subtract(moment(date).minutes(), 'minutes')
+      .subtract(moment(date).seconds(), 'seconds')
+      .add(moment(time).hour(), 'hour')
+      .add(moment(time).minutes(), 'minutes');
+
+    PushNotification.localNotificationSchedule({
+      allowWhileIdle: true,
+      id,
+      title,
+      message,
+      date: new Date(newDate),
+      repeatType,
+      repeatTime,
+    });
+  }
+
+  function cancelNotification(id) {
+    PushNotification.cancelLocalNotifications({ id });
+  }
+
+  function chooseNotification(option) {
+    console.log(JSON.stringify(data, null, 2));
+    switch (option) {
+      case 'notRepeat':
+        console.log('notRepeat');
+        scheduleNotification(
+          data.id,
+          'Olá, é hora de cuidar dos seus aquários',
+          `${data.name} é agora.`,
+          data.date,
+          data.time,
+        );
+        break;
+      case 'everyDay':
+        console.log('everyDay');
+        scheduleNotification(
+          data.id,
+          'Olá, é hora de cuidar dos seus aquários',
+          `${data.name} é agora.`,
+          data.date,
+          data.time,
+          'hour',
+          86400000,
+        );
+        break;
+    }
+  }
+
+  function onChangeDate(selectedDate) {
+    setShowDatePicker(false);
     const currentDate = selectedDate || data.date;
     setData({ ...data, date: currentDate });
-    setShowDatePicker(false);
-  };
+  }
 
-  const onChangeTime = (event, selectedTime) => {
+  function onChangeTime(selectedTime) {
+    setShowTimePicker(false);
     const currentTime = selectedTime || data.time;
     setData({ ...data, time: currentTime });
-    setShowTimePicker(false);
-  };
+  }
 
   useEffect(() => {
     async function setAquariumsRealm() {
@@ -120,14 +181,16 @@ const RememberCreate = () => {
     data.aquarium = aquariumObj;
     setData({ data });
 
+    chooseNotification(data.repeat);
+
     realm.write(() => {
       realm.create(
         'Remember',
         {
           id: data.id,
           name: data.name,
-          date: data.date,
-          time: data.time,
+          date: new Date(data.date),
+          time: new Date(data.time),
           repeat: data.repeat,
           aquarium: data.aquarium.aquarium,
           category: data.category,
@@ -137,52 +200,6 @@ const RememberCreate = () => {
         'modified',
       );
     });
-  }
-
-  function handleAddRemember() {
-    try {
-      console.log('clear-before ' + JSON.stringify(data, null, 2));
-
-      saveRemember();
-
-      setData({
-        id: '',
-        name: '',
-        date: '',
-        time: '',
-        repeat: '',
-        aquarium: '',
-        category: '',
-        quantity: 0,
-        unity: '',
-      });
-
-      setAllCheckboxesDateFalse();
-
-      // setQuantity(0);
-      setRangeDay(0);
-      setRadioButtonGroupValue('');
-      setAquariumSelect('');
-
-      console.log('clear-after ' + JSON.stringify(data, null, 2));
-
-      ToastAndroid.showWithGravityAndOffset(
-        'Salvo com sucesso!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-      Keyboard.dismiss();
-    } catch (error) {
-      ToastAndroid.showWithGravityAndOffset(
-        'Ocorreu um erro!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-    }
   }
 
   function setAllCheckboxesDateFalse() {
@@ -233,6 +250,45 @@ const RememberCreate = () => {
     );
   }
 
+  function handleAddRemember() {
+    try {
+      saveRemember();
+
+      setData({
+        id: '',
+        name: '',
+        date: '',
+        time: '',
+        repeat: '',
+        aquarium: '',
+        category: '',
+        quantity: 0,
+        unity: '',
+      });
+      setAllCheckboxesDateFalse();
+      setRangeDay(0);
+      setRadioButtonGroupValue('');
+      setAquariumSelect('');
+
+      ToastAndroid.showWithGravityAndOffset(
+        'Salvo com sucesso!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      Keyboard.dismiss();
+    } catch (error) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Ocorreu um erro!',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
+  }
+
   return (
     <>
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
@@ -268,7 +324,10 @@ const RememberCreate = () => {
                   value={new Date()}
                   mode="date"
                   display="calendar"
-                  onChange={onChangeDate}
+                  onChange={text => {
+                    onChangeDate(text.nativeEvent.timestamp);
+                    setShowDatePicker(false);
+                  }}
                 />
               )}
             </View>
@@ -298,7 +357,10 @@ const RememberCreate = () => {
                   mode="time"
                   is24Hour={true}
                   display="clock"
-                  onChange={onChangeTime}
+                  onChange={text => {
+                    onChangeTime(text.nativeEvent.timestamp);
+                    setShowTimePicker(false);
+                  }}
                 />
               )}
             </View>
@@ -314,6 +376,20 @@ const RememberCreate = () => {
             setRadioButtonGroupValue(option);
           }}
         />
+
+        {/* ***************** */}
+        <RectButton
+          onPress={() => {
+            PushNotification.getScheduledLocalNotifications(res => {
+              console.log(res);
+            });
+          }}>
+          <Text>show</Text>
+        </RectButton>
+        <RectButton onPress={() => cancelNotification()}>
+          <Text>notification-cancel</Text>
+        </RectButton>
+        {/* ***************** */}
 
         {modalSpecificDayVisible && (
           <CustomModal
@@ -389,6 +465,7 @@ const RememberCreate = () => {
             );
           }}
         />
+
         <PickerSelect
           style={pickerSelectStyles}
           value={data.category}
@@ -417,6 +494,7 @@ const RememberCreate = () => {
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <InputNumber
+            placeholder="Qnt"
             value={data.quantity}
             onChangeText={text => {
               setData({ ...data, quantity: text });
