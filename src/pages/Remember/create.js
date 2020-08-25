@@ -12,17 +12,19 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import PickerSelect from 'react-native-picker-select';
 import moment from 'moment';
 import CheckBox from '@react-native-community/checkbox';
 import PushNotification from 'react-native-push-notification';
 
 import getRealm from '../../services/realm';
 import { NotificationConfigure } from '../../services/notification';
+
 import RadioButtonGroup from '../../components/radioButtonGroup';
 import InputNumber from '../../components/inputNumber';
 import CustomModal from '../../components/customModal';
+import PickerSelect from '../../components/pickerSelect';
+import Button from '../../components/button';
+import DateTimePicker from '../../components/dateTimePicker';
 
 const RememberCreate = () => {
   PushNotification.configure = NotificationConfigure;
@@ -300,71 +302,30 @@ const RememberCreate = () => {
           onChangeText={text => setData({ ...data, name: text })}
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
-          <TouchableWithoutFeedback
-            onPress={() => {
-              setShowDatePicker(true);
-            }}>
-            <View style={styles.containerIconInputText}>
-              <TextInput
-                editable={false}
-                style={styles.inputIcon}
-                placeholder="Data"
-                returnKeyType="next"
-                value={data.date ? moment(data.date).format('DD/MM/YYYY') : ''}
-              />
-              <MaterialCommunityIcons
-                style={styles.iconInputText}
-                name="calendar-month"
-                color="#AAAABB"
-                size={22}
-              />
-              {showDatePicker && (
-                <DateTimePicker
-                  minimumDate={new Date()}
-                  value={new Date()}
-                  mode="date"
-                  display="calendar"
-                  onChange={text => {
-                    onChangeDate(text.nativeEvent.timestamp);
-                    setShowDatePicker(false);
-                  }}
-                />
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-
-          <TouchableWithoutFeedback
-            onPress={() => {
-              setShowTimePicker(true);
-            }}>
-            <View style={[styles.containerIconInputText, { marginLeft: 20 }]}>
-              <TextInput
-                editable={false}
-                style={styles.inputIcon}
-                placeholder="Hora"
-                returnKeyType="next"
-                value={data.time ? moment(data.time).format('HH:mm') : ''}
-              />
-              <MaterialCommunityIcons
-                style={styles.iconInputText}
-                name="clock-outline"
-                color="#AAAABB"
-                size={22}
-              />
-              {showTimePicker && (
-                <DateTimePicker
-                  value={new Date()}
-                  mode="time"
-                  is24Hour={true}
-                  display="clock"
-                  onChange={text => {
-                    onChangeTime(text.nativeEvent.timestamp);
-                    setShowTimePicker(false);
-                  }}
-                />
-              )}
-            </View>
-          </TouchableWithoutFeedback>
+          <DateTimePicker
+            value={data.date}
+            placeholder="Data"
+            format="DD/MM/YYYY"
+            iconName="calendar-month"
+            mode="date"
+            display="calendar"
+            onChange={text => {
+              onChangeDate(text);
+            }}
+          />
+          <View style={{ marginLeft: 20, flex: 1 }}>
+            <DateTimePicker
+              value={data.time}
+              placeholder="Hora"
+              format="HH:mm"
+              iconName="clock-outline"
+              mode="time"
+              display="clock"
+              onChange={text => {
+                onChangeTime(text);
+              }}
+            />
+          </View>
         </View>
 
         <RadioButtonGroup
@@ -445,53 +406,24 @@ const RememberCreate = () => {
         )}
 
         <PickerSelect
-          style={pickerSelectStyles}
           value={aquariumSelect}
           onValueChange={value => setAquariumSelect(value)}
-          useNativeAndroidPickerStyle={false}
-          placeholder={{
-            label: 'Selecione o Aquário',
-            value: '',
-            color: '#AAAABB',
-          }}
+          placeholder="Selecione o Aquário"
           items={aquariumsSelect.options}
-          Icon={() => {
-            return (
-              <MaterialCommunityIcons
-                name="chevron-down"
-                color="#AAAABB"
-                size={28}
-              />
-            );
-          }}
         />
 
         <PickerSelect
-          style={pickerSelectStyles}
           value={data.category}
           onValueChange={value => setData({ ...data, category: value })}
-          useNativeAndroidPickerStyle={false}
-          placeholder={{
-            label: 'Selecione a categoria',
-            value: null,
-            color: '#AAAABB',
-          }}
+          placeholder="Selecione a categoria"
           items={[
             { label: 'Fertilizante', value: 'fertilizer' },
             { label: 'Medicação', value: 'medication' },
             { label: 'Suplementação', value: 'supplementation' },
             { label: 'Limpeza (TPA)', value: 'tpa' },
           ]}
-          Icon={() => {
-            return (
-              <MaterialCommunityIcons
-                name="chevron-down"
-                color="#AAAABB"
-                size={28}
-              />
-            );
-          }}
         />
+
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <InputNumber
             placeholder="Qnt"
@@ -500,58 +432,31 @@ const RememberCreate = () => {
               setData({ ...data, quantity: text });
             }}
           />
-
-          <PickerSelect
-            style={{
-              ...pickerSelectStyles,
-              inputAndroid: {
-                flex: 1,
-                width: 160,
-                height: 60,
-                backgroundColor: '#FFF',
-                borderRadius: 8,
-                marginBottom: 20,
-                marginLeft: 20,
-                paddingHorizontal: 24,
-                fontSize: 16,
-              },
-            }}
-            value={data.unity}
-            onValueChange={value => setData({ ...data, unity: value })}
-            useNativeAndroidPickerStyle={false}
-            placeholder={{
-              label: 'Un. de medida',
-              value: null,
-              color: '#9EA0A4',
-            }}
-            items={[
-              { label: 'Mililitros (ml)', value: 'ml' },
-              { label: 'Litros (L)', value: 'lts' },
-              { label: 'Gotas (Gts)', value: 'gts' },
-              { label: 'Gramas (Gr)', value: 'gr' },
-              { label: 'Quilo (Kg)', value: 'kg' },
-            ]}
-            Icon={() => {
-              return (
-                <MaterialCommunityIcons
-                  name="chevron-down"
-                  color="#AAAABB"
-                  size={28}
-                />
-              );
-            }}
-          />
-        </View>
-        <RectButton style={styles.button} onPress={handleAddRemember}>
-          <View style={styles.buttonIcon}>
-            <MaterialCommunityIcons name="arrow-right" color="#FFF" size={24} />
+          <View style={{ marginLeft: 20, width: '48%' }}>
+            <PickerSelect
+              value={data.unity}
+              onValueChange={value => setData({ ...data, unity: value })}
+              placeholder="Un. de medida"
+              items={[
+                { label: 'Mililitros (ml)', value: 'ml' },
+                { label: 'Litros (L)', value: 'lts' },
+                { label: 'Gotas (Gts)', value: 'gts' },
+                { label: 'Gramas (Gr)', value: 'gr' },
+                { label: 'Quilo (Kg)', value: 'kg' },
+              ]}
+            />
           </View>
-          <Text style={styles.buttonText}>Salvar</Text>
-        </RectButton>
+        </View>
+        <Button
+          onPress={handleAddRemember}
+          text="Salvar"
+          iconName="arrow-right"
+        />
       </KeyboardAwareScrollView>
     </>
   );
 };
+
 const styles = StyleSheet.create({
   input: {
     height: 60,
@@ -559,26 +464,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
     paddingHorizontal: 24,
-    fontSize: 16,
-  },
-  containerIconInputText: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  iconInputText: {
-    paddingRight: 20,
-  },
-  inputIcon: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 8,
-    backgroundColor: '#fff',
     fontSize: 16,
   },
 
@@ -597,58 +482,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 24,
   },
-
-  button: {
-    backgroundColor: '#4499DD',
-    height: 60,
-    flexDirection: 'row',
-    borderRadius: 10,
-    overflow: 'hidden',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  buttonIcon: {
-    height: 60,
-    width: 60,
-    backgroundColor: 'rgba(0, 85, 180, 0.5)',
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    flex: 1,
-    justifyContent: 'center',
-    textAlign: 'center',
-    color: '#FFF',
-    fontFamily: 'Roboto-Medium',
-    fontSize: 16,
-  },
 });
 
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    flex: 1,
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
-  inputAndroid: {
-    flex: 1,
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
-  iconContainer: {
-    top: 16,
-    right: 12,
-  },
-});
 export default RememberCreate;
