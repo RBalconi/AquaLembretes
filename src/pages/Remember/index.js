@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  ScrollView,
   ToastAndroid,
   FlatList,
   Alert,
@@ -13,16 +12,30 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
+import PushNotification from 'react-native-push-notification';
 
 import getRealm from '../../services/realm';
+import { NotificationConfigure } from '../../services/notification';
+
 import SwipeableList from '../../components/swipeableList';
 import Loading from '../../components/loading';
 
 const RememberIndex = () => {
+  PushNotification.configure = NotificationConfigure;
+  const navigation = useNavigation();
+
   const [remember, setRemember] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navigation = useNavigation();
+  const listWeekDay = [
+    'sunday',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+  ];
 
   let swipedCardRef = null;
 
@@ -51,6 +64,14 @@ const RememberIndex = () => {
     }
   }
 
+  function cancelNotification(id) {
+    PushNotification.cancelLocalNotifications({ id: id.toString() });
+    PushNotification.getScheduledLocalNotifications(res => {
+      console.log(res);
+    });
+    // PushNotification.cancelLocalNotifications(2);
+  }
+
   async function deleteRemember(rememberData) {
     setIsLoading(true);
     const realm = await getRealm();
@@ -59,6 +80,8 @@ const RememberIndex = () => {
         .objects('Remember')
         .filtered(`id = '${rememberData.id}'`);
 
+      console.log(JSON.stringify(rememberData, null, 2));
+      cancelNotification(rememberData.id);
       realm.write(() => {
         realm.delete(deletingRemember);
       });
@@ -125,6 +148,18 @@ const RememberIndex = () => {
     navigation.navigate('RememberCreate', { rememberId: 0 });
   }
 
+  function repeatDays(item) {
+    if (item.repeat === 'notRepeat') {
+      return 'Não repetir';
+    } else if (item.repeat === 'everyDay') {
+      return `Todo dia - ${moment(item.time).format('HH:mm')}`;
+    } else if (listWeekDay.some(day => item.repeat.includes(day))) {
+      return `Dias específicos - ${moment(item.time).format('HH:mm')}`;
+    } else {
+      return `Intervalo de dias - ${moment(item.time).format('HH:mm')}`;
+    }
+  }
+
   return (
     <>
       <View style={styles.containerContent}>
@@ -156,9 +191,10 @@ const RememberIndex = () => {
                         {item.quantity + ' ' + item.unity}.
                       </Text>
                       <Text style={styles.info}>
-                        {moment(item.time).format('HH:mm') +
+                        {repeatDays(item)}
+                        {/* {moment(item.time).format('HH:mm') +
                           ' - ' +
-                          moment(item.date).format('DD [de] MMMM')}
+                          moment(item.date).format('DD [de] MMMM')} */}
                       </Text>
                     </View>
                   </View>

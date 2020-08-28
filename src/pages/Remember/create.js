@@ -7,9 +7,7 @@ import {
   Keyboard,
   ToastAndroid,
   TouchableOpacity,
-  TouchableWithoutFeedback,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import moment from 'moment';
@@ -69,7 +67,7 @@ const RememberCreate = () => {
     { id: 'notRepeat', text: 'Não repetir' },
     { id: 'everyDay', text: 'Todos os dias' },
     { id: 'rangeDay', text: 'Intervalo de dias', hasModal: true },
-    { id: 'specificDay', text: 'Dias especifícos da semana', hasModal: true },
+    { id: 'specificDay', text: 'Dias específicos da semana', hasModal: true },
   ];
 
   function scheduleNotification(
@@ -81,7 +79,7 @@ const RememberCreate = () => {
     repeatType,
     repeatTime,
   ) {
-    const newDate = moment(date)
+    const dateByInputs = moment(date)
       .subtract(moment(date).hour(), 'hour')
       .subtract(moment(date).minutes(), 'minutes')
       .subtract(moment(date).seconds(), 'seconds')
@@ -90,10 +88,15 @@ const RememberCreate = () => {
 
     PushNotification.localNotificationSchedule({
       allowWhileIdle: true,
+      // id: '' + id,
+      // userInfo: {
+      //   id: '' + id,
+      // },
       id,
+      userInfo: { id },
       title,
       message,
-      date: new Date(newDate),
+      date: new Date(dateByInputs),
       repeatType,
       repeatTime,
     });
@@ -103,13 +106,11 @@ const RememberCreate = () => {
     PushNotification.cancelLocalNotifications({ id });
   }
 
-  function chooseNotification(option) {
-    console.log(JSON.stringify(data, null, 2));
-    switch (option) {
+  function chooseNotification() {
+    switch (radioButtonGroupValue) {
       case 'notRepeat':
-        console.log('notRepeat');
         scheduleNotification(
-          data.id,
+          '' + data.id,
           'Olá, é hora de cuidar dos seus aquários',
           `${data.name} é agora.`,
           data.date,
@@ -117,16 +118,57 @@ const RememberCreate = () => {
         );
         break;
       case 'everyDay':
-        console.log('everyDay');
         scheduleNotification(
-          data.id,
+          '' + data.id,
           'Olá, é hora de cuidar dos seus aquários',
           `${data.name} é agora.`,
           data.date,
           data.time,
-          'hour',
-          86400000,
+          'day',
         );
+        break;
+      case 'rangeDay':
+        scheduleNotification(
+          '' + data.id,
+          'Olá, é hora de cuidar dos seus aquários',
+          `${data.name} é agora.`,
+          data.date,
+          data.time,
+          'time',
+          data.repeat * 24 * 60 * 60 * 1000,
+        );
+        break;
+      case 'specificDay':
+        specificDay.map(day => {
+          if (!day.checked) {
+            return;
+          }
+          if (moment(moment().day(day.id)._d).isBefore(moment())) {
+            const weekDay = moment()
+              .day(day.id)
+              .weekday();
+            const date = moment().day(weekDay + 7);
+            console.log(data.id + '-' + data.name + '-' + moment());
+            return scheduleNotification(
+              // null,
+              data.id + '-' + data.name + '-' + moment(),
+              'Olá, é hora de cuidar dos seus aquários',
+              `${data.name} é agora.`,
+              date,
+              data.time,
+              'week',
+            );
+          }
+          return scheduleNotification(
+            // null,
+            data.id + '-' + data.name + '-' + moment(),
+            'Olá, é hora de cuidar dos seus aquários',
+            `${data.name} é agora.`,
+            moment().day(day.id)._d,
+            data.time,
+            'week',
+          );
+        });
         break;
     }
   }
@@ -183,7 +225,7 @@ const RememberCreate = () => {
     data.aquarium = aquariumObj;
     setData({ data });
 
-    chooseNotification(data.repeat);
+    chooseNotification();
 
     realm.write(() => {
       realm.create(
@@ -304,7 +346,7 @@ const RememberCreate = () => {
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <DateTimePicker
             value={data.date}
-            placeholder="Data"
+            placeholder="Iniciar em"
             format="DD/MM/YYYY"
             iconName="calendar-month"
             mode="date"
@@ -316,7 +358,7 @@ const RememberCreate = () => {
           <View style={{ marginLeft: 20, flex: 1 }}>
             <DateTimePicker
               value={data.time}
-              placeholder="Hora"
+              placeholder="Ás"
               format="HH:mm"
               iconName="clock-outline"
               mode="time"

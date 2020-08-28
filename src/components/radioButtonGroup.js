@@ -42,13 +42,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
+    marginBottom: 4,
   },
   radioButtonText: {
     marginRight: 35,
     fontSize: 16,
     color: '#9EA0A4',
     marginLeft: 4,
-    marginBottom: 4,
   },
   radioButtonCircle: {
     height: 20,
