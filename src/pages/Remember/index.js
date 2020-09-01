@@ -160,6 +160,13 @@ const RememberIndex = () => {
     }
   }
 
+  async function teste() {
+    const realm = await getRealm();
+    // console.log(JSON.stringify(remember, null, 2));
+    console.log(remember.aquarium);
+    // realm.objects.
+  }
+
   return (
     <>
       <View style={styles.containerContent}>
@@ -179,6 +186,7 @@ const RememberIndex = () => {
                   icon={chooseIcon(item.category)}
                   handleDelete={handleDeleteRemember}
                   // handleEdit={handleEditAquarium}
+                  handleEdit={teste}
                   onOpen={onOpen}
                   onClose={onClose}>
                   <View style={styles.textsCard}>

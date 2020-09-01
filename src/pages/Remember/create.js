@@ -17,6 +17,8 @@ import PushNotification from 'react-native-push-notification';
 import getRealm from '../../services/realm';
 import { NotificationConfigure } from '../../services/notification';
 
+import { saveNotification } from '../../services/Notification/ControllerNotification';
+
 import RadioButtonGroup from '../../components/radioButtonGroup';
 import InputNumber from '../../components/inputNumber';
 import CustomModal from '../../components/customModal';
@@ -88,10 +90,6 @@ const RememberCreate = () => {
 
     PushNotification.localNotificationSchedule({
       allowWhileIdle: true,
-      // id: '' + id,
-      // userInfo: {
-      //   id: '' + id,
-      // },
       id,
       userInfo: { id },
       title,
@@ -106,7 +104,7 @@ const RememberCreate = () => {
     PushNotification.cancelLocalNotifications({ id });
   }
 
-  function chooseNotification() {
+  async function sendNotification() {
     switch (radioButtonGroupValue) {
       case 'notRepeat':
         scheduleNotification(
@@ -139,36 +137,36 @@ const RememberCreate = () => {
         );
         break;
       case 'specificDay':
-        specificDay.map(day => {
-          if (!day.checked) {
-            return;
-          }
-          if (moment(moment().day(day.id)._d).isBefore(moment())) {
-            const weekDay = moment()
-              .day(day.id)
-              .weekday();
-            const date = moment().day(weekDay + 7);
-            console.log(data.id + '-' + data.name + '-' + moment());
-            return scheduleNotification(
-              // null,
-              data.id + '-' + data.name + '-' + moment(),
+        for (const day of specificDay) {
+          if (day.checked) {
+            const realm = await getRealm();
+
+            const lastId = await realm
+              .objects('Notification')
+              .sorted('id', true)[0];
+            const highestId = lastId === null ? 0 : lastId.idNotification;
+            const idNotification = highestId === null ? 1 : highestId + 1;
+
+            let date = moment().day(day.id)._d;
+            if (moment(moment().day(day.id)._d).isBefore(moment())) {
+              const weekDay = moment()
+                .day(day.id)
+                .weekday();
+              date = moment().day(weekDay + 7);
+            }
+
+            scheduleNotification(
+              idNotification,
               'Olá, é hora de cuidar dos seus aquários',
               `${data.name} é agora.`,
               date,
               data.time,
               'week',
             );
+
+            await saveNotification(data.id, idNotification);
           }
-          return scheduleNotification(
-            // null,
-            data.id + '-' + data.name + '-' + moment(),
-            'Olá, é hora de cuidar dos seus aquários',
-            `${data.name} é agora.`,
-            moment().day(day.id)._d,
-            data.time,
-            'week',
-          );
-        });
+        }
         break;
     }
   }
@@ -178,7 +176,6 @@ const RememberCreate = () => {
     const currentDate = selectedDate || data.date;
     setData({ ...data, date: currentDate });
   }
-
   function onChangeTime(selectedTime) {
     setShowTimePicker(false);
     const currentTime = selectedTime || data.time;
@@ -224,8 +221,8 @@ const RememberCreate = () => {
     const aquariumObj = await loadAquarium(aquariumSelect);
     data.aquarium = aquariumObj;
     setData({ data });
-
-    chooseNotification();
+    // console.log(JSON.stringify(data.aquarium, null, 2));
+    console.log(JSON.stringify(data, null, 2));
 
     realm.write(() => {
       realm.create(
@@ -294,25 +291,28 @@ const RememberCreate = () => {
     );
   }
 
-  function handleAddRemember() {
+  async function handleAddRemember() {
     try {
-      saveRemember();
+      await saveRemember();
+      // console.log(data.id);
+      // saveNotification(data.id);
+      sendNotification();
 
-      setData({
-        id: '',
-        name: '',
-        date: '',
-        time: '',
-        repeat: '',
-        aquarium: '',
-        category: '',
-        quantity: 0,
-        unity: '',
-      });
-      setAllCheckboxesDateFalse();
-      setRangeDay(0);
-      setRadioButtonGroupValue('');
-      setAquariumSelect('');
+      // setData({
+      //   id: '',
+      //   name: '',
+      //   date: '',
+      //   time: '',
+      //   repeat: '',
+      //   aquarium: '',
+      //   category: '',
+      //   quantity: 0,
+      //   unity: '',
+      // });
+      // setAllCheckboxesDateFalse();
+      // setRangeDay(0);
+      // setRadioButtonGroupValue('');
+      // setAquariumSelect('');
 
       ToastAndroid.showWithGravityAndOffset(
         'Salvo com sucesso!',
