@@ -1,12 +1,21 @@
 import getRealm from '../../services/realm';
 
-async function loadRememberById(id) {
+async function getNotificationByIdRemember(id) {
   const realm = await getRealm();
-  const loadedRemember = realm.objectForPrimaryKey('Remember', id);
-  return loadedRemember;
+  let notificationObj = realm
+    .objects('Notification')
+    .filtered(`idRemember = '${id}'`);
+
+  let notifications = [];
+  for (let index = 0; index < notificationObj.length; index++) {
+    const element = notificationObj[index];
+    notifications.push(element);
+    // console.log(element);
+  }
+  return notifications;
 }
 
-async function saveNotification(rememberId, idNotification) {
+async function saveNotification(idRemember, idNotification) {
   try {
     const realm = await getRealm();
 
@@ -16,12 +25,10 @@ async function saveNotification(rememberId, idNotification) {
     const highestId = lastNotification == null ? 0 : lastNotification.id;
     const id = highestId == null ? 1 : highestId + 1;
 
-    const rememberObj = await loadRememberById(rememberId);
-
     realm.write(() => {
       realm.create(
         'Notification',
-        { id, idNotification, remember: rememberObj.Remember },
+        { id, idRemember, idNotification },
         'modified',
       );
     });
@@ -30,12 +37,12 @@ async function saveNotification(rememberId, idNotification) {
   }
 }
 
-async function deleteNotification(notificationId) {
+async function deleteNotification(idRemember) {
   try {
     const realm = await getRealm();
     const deletingNotification = realm
       .objects('Notification')
-      .filtered(`id = '${notificationId}'`);
+      .filtered(`idRemember = '${idRemember}'`);
 
     realm.write(() => {
       realm.delete(deletingNotification);

@@ -16,6 +16,7 @@ import PushNotification from 'react-native-push-notification';
 
 import getRealm from '../../services/realm';
 import { NotificationConfigure } from '../../services/notification';
+import { deleteNotification } from '../../services/Notification/ControllerNotification';
 
 import SwipeableList from '../../components/swipeableList';
 import Loading from '../../components/loading';
@@ -25,6 +26,7 @@ const RememberIndex = () => {
   const navigation = useNavigation();
 
   const [remember, setRemember] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
 
   const listWeekDay = [
@@ -64,12 +66,18 @@ const RememberIndex = () => {
     }
   }
 
-  function cancelNotification(id) {
-    PushNotification.cancelLocalNotifications({ id: id.toString() });
-    PushNotification.getScheduledLocalNotifications(res => {
-      console.log(res);
-    });
-    // PushNotification.cancelLocalNotifications(2);
+  async function cancelNotification(idRemember) {
+    const realm = await getRealm();
+
+    let notificationObj = realm
+      .objects('Notification')
+      .filtered(`idRemember = '${idRemember}'`);
+
+    for (let notification of notificationObj) {
+      PushNotification.cancelLocalNotifications({
+        id: notification.idNotification.toString(),
+      });
+    }
   }
 
   async function deleteRemember(rememberData) {
@@ -80,14 +88,12 @@ const RememberIndex = () => {
         .objects('Remember')
         .filtered(`id = '${rememberData.id}'`);
 
-      console.log(JSON.stringify(rememberData, null, 2));
-      cancelNotification(rememberData.id);
       realm.write(() => {
         realm.delete(deletingRemember);
       });
     } catch (error) {
       ToastAndroid.showWithGravityAndOffset(
-        'Ocorreu um erro ao excluir!',
+        'Ocorreu um erro ao excluir lembrete!',
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
         25,
@@ -104,6 +110,8 @@ const RememberIndex = () => {
         {
           text: 'Sim',
           onPress: () => {
+            cancelNotification(rememberData.id);
+            deleteNotification(rememberData.id);
             deleteRemember(rememberData);
           },
         },
@@ -119,6 +127,7 @@ const RememberIndex = () => {
     setIsLoading(true);
     const realm = await getRealm();
     const data = realm.objects('Remember').sorted('name', false);
+
     setRemember(data);
     setIsLoading(false);
   }
@@ -160,13 +169,6 @@ const RememberIndex = () => {
     }
   }
 
-  async function teste() {
-    const realm = await getRealm();
-    // console.log(JSON.stringify(remember, null, 2));
-    console.log(remember.aquarium);
-    // realm.objects.
-  }
-
   return (
     <>
       <View style={styles.containerContent}>
@@ -186,13 +188,13 @@ const RememberIndex = () => {
                   icon={chooseIcon(item.category)}
                   handleDelete={handleDeleteRemember}
                   // handleEdit={handleEditAquarium}
-                  handleEdit={teste}
                   onOpen={onOpen}
                   onClose={onClose}>
                   <View style={styles.textsCard}>
                     <Text style={styles.titleCard}>{item.name}</Text>
                     <Text style={styles.dataCard}>
-                      Aquario XXXXXXXXX{item.aquarium}
+                      {/*  */}
+                      {item.aquarium}
                     </Text>
                     <View style={styles.measures}>
                       <Text style={styles.info}>

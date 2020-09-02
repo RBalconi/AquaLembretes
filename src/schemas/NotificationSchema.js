@@ -5,7 +5,8 @@ export default class NotificationSchema {
     properties: {
       id: { type: 'int', indexed: true },
       idNotification: 'int',
-      remember: { type: 'list', objectType: 'Remember' },
+      idRemember: 'int',
+      // remember: { type: 'list', objectType: 'Remember' },
     },
   };
 }
