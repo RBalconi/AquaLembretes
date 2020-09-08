@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   Keyboard,
   ToastAndroid,
   TouchableOpacity,
 } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import moment from 'moment';
 import CheckBox from '@react-native-community/checkbox';
@@ -25,6 +23,7 @@ import CustomModal from '../../components/customModal';
 import PickerSelect from '../../components/pickerSelect';
 import Button from '../../components/button';
 import DateTimePicker from '../../components/dateTimePicker';
+import TextInput from '../../components/inputText';
 
 const RememberCreate = () => {
   PushNotification.configure = NotificationConfigure;
@@ -34,12 +33,24 @@ const RememberCreate = () => {
     name: '',
     date: '',
     time: '',
-    repeat: '', // notRepeat - everyDay - rangeDay 2 - (specificDays) monday, wednesday, friday, sunday
+    repeat: '', // notRepeat - everyDay - (rangeDay) 2 - (specificDays) monday, wednesday, friday, sunday
     aquarium: '',
     category: '',
     quantity: '',
     unity: '',
   });
+
+  const [error, setError] = useState({
+    name: false,
+    date: false,
+    time: false,
+    repeat: false,
+    aquarium: false,
+    category: false,
+    quantity: false,
+    unity: false,
+  });
+
   const [rangeDay, setRangeDay] = useState(0);
 
   const [radioButtonGroupValue, setRadioButtonGroupValue] = useState();
@@ -54,13 +65,13 @@ const RememberCreate = () => {
     { id: 'saturday', value: 'Sábado.', checked: false },
   ]);
 
-  const [aquariumSelect, setAquariumSelect] = useState({});
+  const [aquariumSelect, setAquariumSelect] = useState('');
   const [aquariumsSelect, setAquariumsSelect] = useState({
     options: [{ label: '', value: '' }],
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [, setShowDatePicker] = useState(false);
+  const [, setShowTimePicker] = useState(false);
 
   const [modalSpecificDayVisible, setModalSpecificDayVisible] = useState(false);
   const [modalRangeDaysVisible, setModalRangeDaysVisible] = useState(false);
@@ -100,52 +111,75 @@ const RememberCreate = () => {
     });
   }
 
-  function cancelNotification(id) {
-    PushNotification.cancelLocalNotifications({ id });
+  async function getIdNotification() {
+    const realm = await getRealm();
+
+    const lastId = await realm.objects('Notification').sorted('id', true)[0];
+    const highestId = lastId == null ? 0 : lastId.idNotification;
+    const idNotification = highestId == null ? 1 : highestId + 1;
+    return idNotification;
+  }
+
+  function translateCategory(category) {
+    switch (category) {
+      case 'fertilizer':
+        return 'Fetilização';
+      case 'medication':
+        return 'Medicação';
+      case 'supplementation':
+        return 'Suplementação';
+      case 'tpa':
+        return 'Limpeza';
+    }
   }
 
   async function sendNotification() {
+    const category = translateCategory(data.category);
     switch (radioButtonGroupValue) {
-      case 'notRepeat':
+      case 'notRepeat': {
+        const idNotification = await getIdNotification();
         scheduleNotification(
-          '' + data.id,
-          'Olá, é hora de cuidar dos seus aquários',
-          `${data.name} é agora.`,
+          idNotification,
+          `Olá, chegou a hora do lembrete "${data.name}."`,
+          `O aquário ${data.aquarium} precisa receber uma ${category}.`,
           data.date,
           data.time,
         );
+        await saveNotification(data.id, idNotification);
         break;
-      case 'everyDay':
+      }
+      case 'everyDay': {
+        const idNotification = await getIdNotification();
         scheduleNotification(
-          '' + data.id,
-          'Olá, é hora de cuidar dos seus aquários',
-          `${data.name} é agora.`,
+          idNotification,
+          `Olá, chegou a hora do lembrete "${data.name}."`,
+          `O aquário ${data.aquarium} precisa receber uma ${category}.`,
           data.date,
           data.time,
           'day',
         );
+        await saveNotification(data.id, idNotification);
         break;
-      case 'rangeDay':
+      }
+      case 'rangeDay': {
+        const idNotification = await getIdNotification();
         scheduleNotification(
-          '' + data.id,
-          'Olá, é hora de cuidar dos seus aquários',
-          `${data.name} é agora.`,
+          idNotification,
+          `Olá, chegou a hora do lembrete "${data.name}."`,
+          `O aquário ${data.aquarium} precisa receber uma ${category}.`,
           data.date,
           data.time,
           'time',
           data.repeat * 24 * 60 * 60 * 1000,
         );
+        await saveNotification(data.id, idNotification);
         break;
-      case 'specificDay':
-        for (const day of specificDay) {
+      }
+      case 'specificDay': {
+        let day;
+        for (day of specificDay) {
           if (day.checked) {
-            const realm = await getRealm();
-
-            const lastId = await realm
-              .objects('Notification')
-              .sorted('id', true)[0];
-            const highestId = lastId == null ? 0 : lastId.idNotification;
-            const idNotification = highestId == null ? 1 : highestId + 1;
+            const idNotification = await getIdNotification();
 
             let date = moment().day(day.id)._d;
             if (moment(moment().day(day.id)._d).isBefore(moment())) {
@@ -157,8 +191,8 @@ const RememberCreate = () => {
 
             scheduleNotification(
               idNotification,
-              'Olá, é hora de cuidar dos seus aquários',
-              `${data.name} é agora.`,
+              `Olá, chegou a hora do lembrete "${data.name}."`,
+              `O aquário ${data.aquarium} precisa receber uma ${category}.`,
               date,
               data.time,
               'week',
@@ -168,18 +202,8 @@ const RememberCreate = () => {
           }
         }
         break;
+      }
     }
-  }
-
-  function onChangeDate(selectedDate) {
-    setShowDatePicker(false);
-    const currentDate = selectedDate || data.date;
-    setData({ ...data, date: currentDate });
-  }
-  function onChangeTime(selectedTime) {
-    setShowTimePicker(false);
-    const currentTime = selectedTime || data.time;
-    setData({ ...data, time: currentTime });
   }
 
   useEffect(() => {
@@ -199,26 +223,37 @@ const RememberCreate = () => {
     setAquariumsRealm();
   }, []);
 
-  async function loadAquarium(id) {
-    const realm = await getRealm();
-    const loadedAquarium = realm.objectForPrimaryKey('Aquarium', id);
-    return loadedAquarium;
+  function validateInputsToSave() {
+    const temp = { ...error };
+    let erro,
+      hasApproved = false;
+    for (erro in error) {
+      temp[erro] = !data[erro];
+      !data[erro] ? (hasApproved = false) : (hasApproved = true);
+      setError(temp);
+    }
+    if (hasApproved) {
+      return true;
+    }
   }
+
+  useEffect(() => {
+    async function loadID() {
+      const realm = await getRealm();
+      if (!data.id) {
+        const lastRemember = realm.objects('Remember').sorted('id', true)[0];
+        const highestId = lastRemember == null ? 0 : lastRemember.id;
+        const newId = highestId == null ? 1 : highestId + 1;
+        setData({ ...data, id: newId });
+      }
+    }
+    loadID();
+  }, [data]);
 
   async function saveRemember() {
     const realm = await getRealm();
 
-    if (!data.id) {
-      const lastRemember = realm.objects('Remember').sorted('id', true)[0];
-      const highestId = lastRemember == null ? 0 : lastRemember.id;
-      const newId = highestId == null ? 1 : highestId + 1;
-      data.id = newId;
-      setData({ data });
-    }
-
-    const aquariumObj = await loadAquarium(aquariumSelect);
-    data.aquarium = aquariumObj;
-    setData({ data });
+    console.log(JSON.stringify(data, null, 2));
 
     realm.write(() => {
       realm.create(
@@ -229,7 +264,7 @@ const RememberCreate = () => {
           date: new Date(data.date),
           time: new Date(data.time),
           repeat: data.repeat,
-          aquarium: data.aquarium.name,
+          aquarium: data.aquarium,
           category: data.category,
           quantity: parseFloat(data.quantity),
           unity: data.unity,
@@ -247,6 +282,25 @@ const RememberCreate = () => {
     );
   }
 
+  function onChangeSelectAquarium(value) {
+    const labelSelected = aquariumsSelect.options.filter(
+      aquarium => aquarium.value === value,
+    );
+    setAquariumSelect(value);
+    setData({ ...data, aquarium: labelSelected[0]?.label });
+  }
+
+  function onChangeDate(selectedDate) {
+    setShowDatePicker(false);
+    const currentDate = selectedDate || data.date;
+    setData({ ...data, date: currentDate });
+  }
+  function onChangeTime(selectedTime) {
+    setShowTimePicker(false);
+    const currentTime = selectedTime || data.time;
+    setData({ ...data, time: currentTime });
+  }
+
   function onCloseCancelSpecificDayModal() {
     setAllCheckboxesDateFalse();
     setModalSpecificDayVisible(false);
@@ -260,6 +314,10 @@ const RememberCreate = () => {
     setModalSpecificDayVisible(false);
   }
 
+  function onCloseCancelRangeDaysModal() {
+    setRangeDay(0);
+    setModalRangeDaysVisible(false);
+  }
   function onCloseSucessRangeDaysModal() {
     data.repeat = rangeDay.toString();
     setData(data);
@@ -288,53 +346,64 @@ const RememberCreate = () => {
   }
 
   async function handleAddRemember() {
-    try {
-      await saveRemember();
-      sendNotification();
-
-      setData({
-        id: '',
-        name: '',
-        date: '',
-        time: '',
-        repeat: '',
-        aquarium: '',
-        category: '',
-        quantity: 0,
-        unity: '',
-      });
-      setAllCheckboxesDateFalse();
-      setRangeDay(0);
-      setRadioButtonGroupValue('');
-      setAquariumSelect('');
-
+    const approved = validateInputsToSave();
+    console.log('approved:: ' + approved);
+    if (!approved) {
       ToastAndroid.showWithGravityAndOffset(
-        'Salvo com sucesso!',
+        'Ops, ocorreu um erro!\nPor favor preencha todos os campos.',
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
         25,
         50,
       );
-      Keyboard.dismiss();
-    } catch (error) {
-      ToastAndroid.showWithGravityAndOffset(
-        'Ocorreu um erro!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
+      return;
     }
+    await saveRemember();
+    sendNotification();
+    setError({
+      name: false,
+      date: false,
+      time: false,
+      repeat: false,
+      aquarium: false,
+      category: false,
+      quantity: false,
+      unity: false,
+    });
+    setData({
+      id: '',
+      name: '',
+      date: '',
+      time: '',
+      repeat: '',
+      aquarium: '',
+      category: '',
+      quantity: '',
+      unity: '',
+    });
+    setAllCheckboxesDateFalse();
+    setRangeDay(0);
+    setRadioButtonGroupValue('');
+    setAquariumSelect('');
+
+    ToastAndroid.showWithGravityAndOffset(
+      'Salvo com sucesso!',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
+    Keyboard.dismiss();
   }
 
   return (
     <>
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
         <TextInput
-          style={styles.input}
           placeholder="Nome do lembrete"
           returnKeyType="next"
           value={data.name}
+          error={error.name}
           onChangeText={text => setData({ ...data, name: text })}
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -348,6 +417,7 @@ const RememberCreate = () => {
             onChange={text => {
               onChangeDate(text);
             }}
+            error={error.date}
           />
           <View style={{ marginLeft: 20, flex: 1 }}>
             <DateTimePicker
@@ -360,6 +430,7 @@ const RememberCreate = () => {
               onChange={text => {
                 onChangeTime(text);
               }}
+              error={error.time}
             />
           </View>
         </View>
@@ -372,21 +443,8 @@ const RememberCreate = () => {
             handleChooseRadioButton(option);
             setRadioButtonGroupValue(option);
           }}
+          error={error.repeat}
         />
-
-        {/* ***************** */}
-        <RectButton
-          onPress={() => {
-            PushNotification.getScheduledLocalNotifications(res => {
-              console.log(res);
-            });
-          }}>
-          <Text>show</Text>
-        </RectButton>
-        <RectButton onPress={() => cancelNotification()}>
-          <Text>notification-cancel</Text>
-        </RectButton>
-        {/* ***************** */}
 
         {modalSpecificDayVisible && (
           <CustomModal
@@ -428,7 +486,7 @@ const RememberCreate = () => {
               onCloseSucessRangeDaysModal();
             }}
             onCloseCancel={() => {
-              setModalRangeDaysVisible(false);
+              onCloseCancelRangeDaysModal();
             }}>
             <View style={{ flexDirection: 'row' }}>
               <InputNumber
@@ -443,9 +501,10 @@ const RememberCreate = () => {
 
         <PickerSelect
           value={aquariumSelect}
-          onValueChange={value => setAquariumSelect(value)}
+          onValueChange={value => onChangeSelectAquarium(value)}
           placeholder="Selecione o Aquário"
           items={aquariumsSelect.options}
+          error={error.aquarium}
         />
 
         <PickerSelect
@@ -453,11 +512,12 @@ const RememberCreate = () => {
           onValueChange={value => setData({ ...data, category: value })}
           placeholder="Selecione a categoria"
           items={[
-            { label: 'Fertilizante', value: 'fertilizer' },
+            { label: 'Fertilização', value: 'fertilizer' },
             { label: 'Medicação', value: 'medication' },
             { label: 'Suplementação', value: 'supplementation' },
-            { label: 'Limpeza (TPA)', value: 'tpa' },
+            { label: 'Limpeza', value: 'tpa' },
           ]}
+          error={error.category}
         />
 
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -467,6 +527,7 @@ const RememberCreate = () => {
             onChangeText={text => {
               setData({ ...data, quantity: text });
             }}
+            error={error.quantity}
           />
           <View style={{ marginLeft: 20, width: '48%' }}>
             <PickerSelect
@@ -480,6 +541,7 @@ const RememberCreate = () => {
                 { label: 'Gramas (Gr)', value: 'gr' },
                 { label: 'Quilo (Kg)', value: 'kg' },
               ]}
+              error={error.unity}
             />
           </View>
         </View>
@@ -494,29 +556,12 @@ const RememberCreate = () => {
 };
 
 const styles = StyleSheet.create({
-  input: {
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
-
   checkboxContainer: {
     flexDirection: 'row',
     alignContent: 'center',
   },
   checkboxText: {
     alignSelf: 'center',
-  },
-
-  datePicker: {
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 24,
   },
 });
 

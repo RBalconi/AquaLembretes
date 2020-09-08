@@ -159,7 +159,7 @@ const RememberIndex = () => {
 
   function repeatDays(item) {
     if (item.repeat === 'notRepeat') {
-      return 'Não repetir';
+      return `Não repetir - ${moment(item.time).format('HH:mm')}`;
     } else if (item.repeat === 'everyDay') {
       return `Todo dia - ${moment(item.time).format('HH:mm')}`;
     } else if (listWeekDay.some(day => item.repeat.includes(day))) {

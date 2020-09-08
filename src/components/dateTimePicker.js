@@ -17,6 +17,7 @@ function DateTimePicker({
   iconName,
   mode,
   display,
+  error,
 }) {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -25,7 +26,7 @@ function DateTimePicker({
       onPress={() => {
         setShowPicker(true);
       }}>
-      <View style={styles.containerIconInputText}>
+      <View style={[styles.containerIconInputText, error && styles.inputError]}>
         <TextInput
           editable={false}
           style={styles.inputIcon}
@@ -76,6 +77,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#0055AA',
+    borderWidth: 2,
   },
 });
 

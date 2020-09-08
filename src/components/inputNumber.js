@@ -7,14 +7,21 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-function InputNumber({ onChangeText = () => {}, value, placeholder }) {
+function InputNumber({ onChangeText = () => {}, value, placeholder, error }) {
   const [number, setNumber] = useState(value);
+
+  useEffect(() => {
+    if (value === '') {
+      setNumber(0);
+    }
+  }, [value]);
 
   function increase() {
     const numberAdded = number + 1;
     setNumber(parseFloat(numberAdded));
     onChangeText(numberAdded);
   }
+
   function decrease() {
     if (number <= 0) {
       setNumber(0);
@@ -26,7 +33,7 @@ function InputNumber({ onChangeText = () => {}, value, placeholder }) {
   }
 
   return (
-    <View style={styles.containerNumberInput}>
+    <View style={[styles.containerNumberInput, error && styles.inputError]}>
       <TouchableWithoutFeedback
         onPress={() => {
           decrease();
@@ -79,6 +86,10 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#0055AA',
+    borderWidth: 2,
   },
 });
 

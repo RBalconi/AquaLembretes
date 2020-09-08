@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-function RadioButtonGroup({ data, title, onChange = () => {}, value }) {
+function RadioButtonGroup({ data, title, onChange = () => {}, value, error }) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, error && styles.inputError]}>
       <Text style={styles.titleGroup}>{title}</Text>
       {data.map(item => {
         return (
@@ -43,6 +43,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  inputError: {
+    borderColor: '#0055AA',
+    borderWidth: 2,
   },
   radioButtonText: {
     marginRight: 35,

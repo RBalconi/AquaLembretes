@@ -3,32 +3,21 @@ import { StyleSheet, View } from 'react-native';
 import Select from 'react-native-picker-select';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-function PickerSelect({ value, onValueChange = () => {}, items, placeholder }) {
+function PickerSelect({
+  value,
+  onValueChange = () => {},
+  items,
+  placeholder,
+  error,
+}) {
   return (
-    <View>
+    <View style={[styles.inputView, error && styles.inputError]}>
       <Select
-        style={{
-          ...pickerSelectStyles,
-          // inputAndroid: {
-          //   flex: 1,
-          //   width: 160,
-          //   height: 60,
-          //   backgroundColor: '#FFF',
-          //   borderRadius: 8,
-          //   marginBottom: 20,
-          //   marginLeft: 20,
-          //   paddingHorizontal: 24,
-          //   fontSize: 16,
-          // },
-        }}
+        style={pickerSelectStyles}
         value={value}
         onValueChange={item => onValueChange(item)}
         useNativeAndroidPickerStyle={false}
-        placeholder={{
-          label: placeholder,
-          value: null,
-          color: '#9EA0A4',
-        }}
+        placeholder={{ label: placeholder, value: null, color: '#9EA0A4' }}
         items={items}
         Icon={() => {
           return (
@@ -43,22 +32,31 @@ function PickerSelect({ value, onValueChange = () => {}, items, placeholder }) {
     </View>
   );
 }
+const styles = StyleSheet.create({
+  inputError: {
+    borderColor: '#0055AA',
+    borderWidth: 2,
+    borderRadius: 8,
+  },
+  inputView: {
+    marginBottom: 20,
+  },
+});
+
 const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     flex: 1,
-    height: 60,
+    height: 59,
     backgroundColor: '#FFF',
     borderRadius: 8,
-    marginBottom: 20,
     paddingHorizontal: 24,
     fontSize: 16,
   },
   inputAndroid: {
     flex: 1,
-    height: 60,
+    height: 59,
     backgroundColor: '#FFF',
     borderRadius: 8,
-    marginBottom: 20,
     paddingHorizontal: 24,
     fontSize: 16,
   },
