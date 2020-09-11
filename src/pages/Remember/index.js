@@ -127,7 +127,6 @@ const RememberIndex = () => {
     setIsLoading(true);
     const realm = await getRealm();
     const data = realm.objects('Remember').sorted('name', false);
-
     setRemember(data);
     setIsLoading(false);
   }
@@ -159,13 +158,13 @@ const RememberIndex = () => {
 
   function repeatDays(item) {
     if (item.repeat === 'notRepeat') {
-      return `Não repetir - ${moment(item.time).format('HH:mm')}`;
+      return `${moment(item.time).format('HH:mm')} - Não repetir`;
     } else if (item.repeat === 'everyDay') {
-      return `Todo dia - ${moment(item.time).format('HH:mm')}`;
+      return `${moment(item.time).format('HH:mm')} - Todo dia`;
     } else if (listWeekDay.some(day => item.repeat.includes(day))) {
-      return `Dias específicos - ${moment(item.time).format('HH:mm')}`;
+      return `${moment(item.time).format('HH:mm')} - Dias específicos`;
     } else {
-      return `Intervalo de dias - ${moment(item.time).format('HH:mm')}`;
+      return `${moment(item.time).format('HH:mm')} - Intervalo de dias`;
     }
   }
 
@@ -187,25 +186,16 @@ const RememberIndex = () => {
                   data={item}
                   icon={chooseIcon(item.category)}
                   handleDelete={handleDeleteRemember}
-                  // handleEdit={handleEditAquarium}
                   onOpen={onOpen}
                   onClose={onClose}>
                   <View style={styles.textsCard}>
                     <Text style={styles.titleCard}>{item.name}</Text>
-                    <Text style={styles.dataCard}>
-                      {/*  */}
-                      {item.aquarium}
-                    </Text>
+                    <Text style={styles.dataCard}>{item.aquarium}</Text>
                     <View style={styles.measures}>
                       <Text style={styles.info}>
                         {item.quantity + ' ' + item.unity}.
                       </Text>
-                      <Text style={styles.info}>
-                        {repeatDays(item)}
-                        {/* {moment(item.time).format('HH:mm') +
-                          ' - ' +
-                          moment(item.date).format('DD [de] MMMM')} */}
-                      </Text>
+                      <Text style={styles.info}>{repeatDays(item)}</Text>
                     </View>
                   </View>
                 </SwipeableList>
@@ -224,6 +214,7 @@ const RememberIndex = () => {
     </>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     paddingLeft: 20,
@@ -236,26 +227,31 @@ const styles = StyleSheet.create({
     borderTopStartRadius: 40,
     paddingBottom: 0,
   },
+
   textsCard: {
     flex: 1,
     alignContent: 'space-between',
   },
+
   titleCard: {
     color: '#334455',
     fontFamily: 'Roboto-Bold',
     fontSize: 20,
     paddingBottom: 4,
   },
+
   dataCard: {
     color: '#334455',
     fontFamily: 'Roboto-Light',
     fontSize: 16,
   },
+
   measures: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
   info: {
     color: '#3A4E5F',
     fontFamily: 'Roboto-Medium',

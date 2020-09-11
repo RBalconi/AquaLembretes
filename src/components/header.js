@@ -9,7 +9,7 @@ function Header(props) {
 
   const animations = {
     aquarium: require('../assets/animations/aquarium-anim.json'),
-    // animation2: require('../assets/animations/'),
+    remember: require('../assets/animations/remember-anim.json'),
   };
 
   function handleNavigateBack() {

@@ -3,21 +3,29 @@ import {
   View,
   Text,
   Image,
-  TextInput,
   StyleSheet,
   Keyboard,
   ToastAndroid,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useRoute } from '@react-navigation/native';
+import {
+  useRoute,
+  useNavigation,
+  CommonActions,
+} from '@react-navigation/native';
 import { RectButton } from 'react-native-gesture-handler';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ImagePicker from 'react-native-image-picker';
-import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
+
+import getRealm from '../../services/realm';
+
+import TextInput from '../../components/inputText';
+import Button from '../../components/button';
 
 const AquariumCreate = () => {
   const route = useRoute();
+  const navigation = useNavigation();
   const routeParams = route.params;
 
   const lengthInput = useRef(null);
@@ -27,10 +35,24 @@ const AquariumCreate = () => {
   const [data, setData] = useState({
     id: '',
     name: '',
-    imageName: '',
+    image: '',
     length: '',
     width: '',
     height: '',
+  });
+
+  const [imageGalery, setImageGalery] = useState({
+    uri: '',
+    fileName: '',
+    path: '',
+  });
+
+  const [error, setError] = useState({
+    image: false,
+    name: false,
+    length: false,
+    width: false,
+    height: false,
   });
 
   async function loadAquarium(id) {
@@ -40,38 +62,51 @@ const AquariumCreate = () => {
     return loadedAquarium;
   }
 
+  function validateInputsToSave() {
+    const temp = { ...error };
+    let erro;
+    for (erro in error) {
+      temp[erro] = !data[erro];
+      setError(temp);
+    }
+    for (erro in temp) {
+      if (temp[erro]) {
+        return true;
+      }
+    }
+  }
+
   useEffect(() => {
     if (routeParams.aquariumId !== 0) {
       loadAquarium(routeParams.aquariumId).then(response => {
         setData({
           id: response.id,
           name: String(response.name),
-          imageName: { uri: String(response.imageName) },
+          image: String(response.imageName),
           length: String(response.length),
           width: String(response.width),
           height: String(response.height),
         });
-        // console.log('useEffect::: ' + JSON.stringify(data, null, 2));
+        setImageGalery({ uri: String(response.imageName) });
       });
     }
   }, [routeParams.aquariumId]);
 
+  useEffect(() => {
+    async function loadID() {
+      const realm = await getRealm();
+      if (!data.id) {
+        const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
+        const highestId = lastAquarium == null ? 0 : lastAquarium.id;
+        const newId = highestId == null ? 1 : highestId + 1;
+        setData({ ...data, id: newId });
+      }
+    }
+    loadID();
+  }, [data]);
+
   async function saveAquarium() {
     const realm = await getRealm();
-
-    if (!data.id) {
-      const lastAquarium = realm.objects('Aquarium').sorted('id', true)[0];
-      const highestId = lastAquarium == null ? 0 : lastAquarium.id;
-      const newId = highestId == null ? 1 : highestId + 1;
-      data.id = newId;
-      setData({ data });
-    }
-
-    if (data.imageName.fileName) {
-      const imageName = await createPathPhoto(data.imageName);
-      data.imageName.uri = 'file://' + imageName;
-      setData({ data });
-    }
 
     realm.write(() => {
       realm.create(
@@ -79,7 +114,7 @@ const AquariumCreate = () => {
         {
           id: data.id,
           name: data.name,
-          imageName: data.imageName.uri,
+          imageName: data.image,
           length: parseFloat(data.length),
           width: parseFloat(data.width),
           height: parseFloat(data.height),
@@ -89,23 +124,28 @@ const AquariumCreate = () => {
     });
   }
 
-  async function createPathPhoto(file) {
-    const date = new Date();
-    const time =
-      date.getHours() + '' + date.getMinutes() + '' + date.getSeconds();
-
+  async function createPathPhoto() {
     const destPath = RNFS.ExternalDirectoryPath + '/imagesAquariums';
-    const finalPath = destPath + '/' + time + file.fileName;
-
-    if ((await RNFS.exists(destPath)) === false) {
-      RNFS.mkdir(destPath);
-    }
-
-    RNFS.copyFile(file.path, finalPath);
-    return finalPath;
+    !(await RNFS.exists(destPath)) && (await RNFS.mkdir(destPath));
+    return;
   }
 
-  function handleChoosePhoto() {
+  async function generateFileToPath(file) {
+    const date = new Date();
+    const time =
+      date.getDate() +
+      date.getMonth() +
+      date.getFullYear() +
+      date.getHours() +
+      date.getMinutes() +
+      date.getSeconds();
+
+    const destPath =
+      RNFS.ExternalDirectoryPath + '/imagesAquariums/' + time + file.fileName;
+    return destPath;
+  }
+
+  function launchImageLibrary() {
     const options = {
       title: 'Foto do aquário',
       customButtons: [{ name: 'aqua', title: 'Selecione a foto do aquário.' }],
@@ -115,50 +155,92 @@ const AquariumCreate = () => {
       },
       noData: true,
     };
-    ImagePicker.launchImageLibrary(options, response => {
-      if (response.uri) {
-        setData({
-          ...data,
-          imageName: {
-            uri: response.uri,
-            fileName: response.fileName,
-            path: response.path,
-          },
+
+    ImagePicker.launchImageLibrary(options, async response => {
+      if (!(response.didCancel || response.error)) {
+        const imageUri = await generateFileToPath(response);
+
+        setData({ ...data, image: 'file://' + imageUri });
+        setImageGalery({
+          uri: response.uri,
+          fileName: response.fileName,
+          path: response.path,
         });
       }
     });
   }
 
-  function handleAddAquarium() {
-    try {
-      saveAquarium();
-      setData({
-        id: '',
-        name: '',
-        imageName: '',
-        length: '',
-        width: '',
-        height: '',
-      });
-      ToastAndroid.showWithGravityAndOffset(
-        'Salvo com sucesso!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-      Keyboard.dismiss();
-    } catch (error) {
-      ToastAndroid.showWithGravityAndOffset(
-        'Ocorreu um erro!',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-    }
+  function handleChoosePhoto() {
+    launchImageLibrary();
   }
-  const handleInputValidate = text => {
+
+  async function handleAddAquarium() {
+    const invalidated = validateInputsToSave();
+    if (invalidated) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Ops, ocorreu um erro!\nPor favor preencha todos os campos.',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      return;
+    }
+
+    await createPathPhoto();
+    if (routeParams.aquariumId !== 0) {
+      loadAquarium(data.id).then(async resp => {
+        if (await RNFS.exists(String(resp.imageName))) {
+          if (data.image && imageGalery.path) {
+            await RNFS.unlink(String(resp.imageName));
+          }
+        }
+      });
+    }
+    if (data.image && imageGalery.path) {
+      await RNFS.copyFile(imageGalery.path, data.image);
+    }
+
+    saveAquarium();
+
+    if (routeParams.aquariumId !== 0) {
+      navigation.navigate('AquariumShow', { aquariumId: data.id });
+      navigation.dispatch(state => {
+        const routes = state.routes.filter(r => r.name !== 'AquariumCreate');
+        return CommonActions.reset({
+          ...state,
+          routes,
+          index: routes.length - 1,
+        });
+      });
+    }
+
+    setData({
+      id: '',
+      name: '',
+      image: '',
+      length: '',
+      width: '',
+      height: '',
+    });
+
+    setImageGalery({
+      uri: '',
+      fileName: '',
+      path: '',
+    });
+
+    ToastAndroid.showWithGravityAndOffset(
+      'Salvo com sucesso!',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
+    Keyboard.dismiss();
+  }
+
+  const handleInputOnlyNumbers = text => {
     if (/^[\d,.]+$/.test(text) || text === '') {
       return text;
     }
@@ -167,37 +249,41 @@ const AquariumCreate = () => {
   return (
     <>
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-        <RectButton style={styles.inputImage} onPress={handleChoosePhoto}>
-          <View style={{ alignItems: 'center' }}>
-            {data.imageName ? (
-              <Image
-                source={{ uri: data.imageName.uri }}
-                style={styles.photoAquarium}
-              />
-            ) : (
-              <>
-                <MaterialCommunityIcons
-                  name="upload-outline"
-                  size={40}
-                  color="#AFAFAF"
+        <View style={[styles.inputImage, error.image && styles.inputError]}>
+          <RectButton
+            style={{ flex: 1, justifyContent: 'center' }}
+            onPress={handleChoosePhoto}>
+            <View style={{ alignItems: 'center' }}>
+              {imageGalery.uri ? (
+                <Image
+                  source={{ uri: imageGalery.uri }}
+                  style={styles.photoAquarium}
                 />
-                <Text style={{ color: '#AFAFAF', fontSize: 15 }}>
-                  Selecionar foto.
-                </Text>
-              </>
-            )}
-          </View>
-        </RectButton>
+              ) : (
+                <>
+                  <MaterialCommunityIcons
+                    name="upload-outline"
+                    size={40}
+                    color="#AFAFAF"
+                  />
+                  <Text style={{ color: '#AFAFAF', fontSize: 15 }}>
+                    Selecionar foto.
+                  </Text>
+                </>
+              )}
+            </View>
+          </RectButton>
+        </View>
+
         <TextInput
-          style={styles.input}
           placeholder="Nome"
-          returnKeyType={'next'}
-          onSubmitEditing={() => lengthInput.current.focus()}
+          returnKeyType="next"
           value={data.name}
           onChangeText={text => setData({ ...data, name: text })}
+          onSubmitEditing={() => lengthInput.current.focus()}
+          error={error.name}
         />
         <TextInput
-          style={styles.input}
           placeholder="Comprimento (cm)"
           keyboardType="numeric"
           returnKeyType="next"
@@ -205,11 +291,12 @@ const AquariumCreate = () => {
           onSubmitEditing={() => widthInput.current.focus()}
           value={data?.length ?? ''}
           onChangeText={text => {
-            setData({ ...data, length: handleInputValidate(text) });
+            setData({ ...data, length: handleInputOnlyNumbers(text) });
           }}
+          error={error.length}
         />
+
         <TextInput
-          style={styles.input}
           placeholder="Largura (cm)"
           keyboardType="numeric"
           returnKeyType="next"
@@ -217,26 +304,27 @@ const AquariumCreate = () => {
           onSubmitEditing={() => heightInput.current.focus()}
           value={data?.width ?? ''}
           onChangeText={text =>
-            setData({ ...data, width: handleInputValidate(text) })
+            setData({ ...data, width: handleInputOnlyNumbers(text) })
           }
+          error={error.width}
         />
         <TextInput
-          style={styles.input}
           placeholder="Altura (cm)"
           keyboardType="numeric"
           returnKeyType="done"
           ref={heightInput}
           value={data.height ?? ''}
           onChangeText={text =>
-            setData({ ...data, height: handleInputValidate(text) })
+            setData({ ...data, height: handleInputOnlyNumbers(text) })
           }
+          onSubmitEditing={() => Keyboard.dismiss()}
+          error={error.height}
         />
-        <RectButton style={styles.button} onPress={handleAddAquarium}>
-          <View style={styles.buttonIcon}>
-            <MaterialCommunityIcons name="arrow-right" color="#FFF" size={24} />
-          </View>
-          <Text style={styles.buttonText}>Salvar</Text>
-        </RectButton>
+        <Button
+          onPress={handleAddAquarium}
+          text="Salvar"
+          iconName="arrow-right"
+        />
       </KeyboardAwareScrollView>
     </>
   );
@@ -256,42 +344,9 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     borderRadius: 20,
   },
-  input: {
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#4499DD',
-    height: 60,
-    flexDirection: 'row',
-    borderRadius: 10,
-    overflow: 'hidden',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-
-  buttonIcon: {
-    height: 60,
-    width: 60,
-    backgroundColor: 'rgba(0, 85, 180, 0.5)',
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  buttonText: {
-    flex: 1,
-    justifyContent: 'center',
-    textAlign: 'center',
-    color: '#FFF',
-    fontFamily: 'Roboto-Medium',
-    fontSize: 16,
+  inputError: {
+    borderColor: '#0055AA',
+    borderWidth: 2,
   },
 });
 

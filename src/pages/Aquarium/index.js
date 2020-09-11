@@ -86,25 +86,20 @@ const AquariumIndex = props => {
     const data = realm.objects('Aquarium').sorted('name', false);
     setAquariums(data);
     setIsLoading(false);
-    // console.log('setAquariumsRealm');
   }
   async function removeListenerRefreshAquarium() {
     const realm = await getRealm();
     realm.removeListener('change', () => {});
-    // console.log('removeListenerRefreshAquarium');
   }
   const startListenerRefreshAquarium = useCallback(async () => {
     const realm = await getRealm();
     realm.addListener('change', () => setAquariumsRealm());
-    // console.log('startListenerRefreshAquarium');
   }, []);
 
   useEffect(() => {
     startListenerRefreshAquarium();
-    // setAquariumsRealm();
     return () => {
       removeListenerRefreshAquarium();
-      // setAquariumsRealm();
     };
   }, [startListenerRefreshAquarium]);
 

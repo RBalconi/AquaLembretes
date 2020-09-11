@@ -7,26 +7,27 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 const SwipeableRightActions = ({ data, handleDelete, handleEdit }) => {
   return (
     <View style={styles.containerSwipeable}>
-      <RectButton
-        style={styles.containerItemSwipeable}
-        onPress={() => handleEdit(data)}>
-        <MaterialCommunityIcons
-          name="file-document-edit-outline"
-          size={30}
-          color="#0055AA"
-        />
-        <Text>Editar</Text>
-      </RectButton>
-
+      {handleEdit && (
+        <RectButton
+          style={[styles.containerItemSwipeable, { marginRight: 20 }]}
+          onPress={() => handleEdit(data)}>
+          <MaterialCommunityIcons
+            name="file-document-edit-outline"
+            size={30}
+            color="#FFF"
+          />
+          <Text style={styles.textButtonSwipeable}>Editar</Text>
+        </RectButton>
+      )}
       <RectButton
         style={styles.containerItemSwipeable}
         onPress={() => handleDelete(data)}>
         <MaterialCommunityIcons
           name="trash-can-outline"
           size={30}
-          color="#0055AA"
+          color="#FFF"
         />
-        <Text>Deletar</Text>
+        <Text style={styles.textButtonSwipeable}>Deletar</Text>
       </RectButton>
     </View>
   );
@@ -70,14 +71,23 @@ function SwipeableList({
             handleEdit={handleEdit}
           />
         )}>
-        <RectButton
-          style={styles.cardRemember}
-          onPress={() => handleShow && handleShow(data.id)}>
-          <View style={styles.iconCard}>
-            <MaterialCommunityIcons name={icon} color="#0055AA" size={50} />
+        {!handleShow ? (
+          <View style={styles.cardRemember}>
+            <View style={styles.iconCard}>
+              <MaterialCommunityIcons name={icon} color="#0055AA" size={50} />
+            </View>
+            {children}
           </View>
-          {children}
-        </RectButton>
+        ) : (
+          <RectButton
+            style={styles.cardRemember}
+            onPress={() => handleShow && handleShow(data.id)}>
+            <View style={styles.iconCard}>
+              <MaterialCommunityIcons name={icon} color="#0055AA" size={50} />
+            </View>
+            {children}
+          </RectButton>
+        )}
       </Swipeable>
     </View>
   );
@@ -85,11 +95,12 @@ function SwipeableList({
 
 const styles = StyleSheet.create({
   containerCardRemember: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#0055AA',
     borderRadius: 20,
     marginBottom: 20,
     overflow: 'hidden',
   },
+
   cardRemember: {
     borderRadius: 20,
 
@@ -112,16 +123,20 @@ const styles = StyleSheet.create({
   containerSwipeable: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    backgroundColor: '#FFF',
+    justifyContent: 'flex-start',
+    backgroundColor: '#0055AA',
     borderRadius: 20,
     padding: 20,
   },
+
   containerItemSwipeable: {
-    marginLeft: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: '#0055AA',
     alignItems: 'center',
     alignContent: 'center',
+  },
+
+  textButtonSwipeable: {
+    color: '#FFF',
   },
 });
 export default SwipeableList;

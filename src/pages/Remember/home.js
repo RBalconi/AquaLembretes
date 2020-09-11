@@ -15,7 +15,7 @@ const RememberHome = props => {
       />
       <View style={{ flex: 1, backgroundColor: '#0055AA' }}>
         <View style={styles.container}>
-          <Header title={'Lembretes'} animation={'aquarium'} />
+          <Header title={'Lembretes'} animation={'remember'} />
         </View>
         <View style={styles.containerContent}>
           <RememberNavigation />

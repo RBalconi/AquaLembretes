@@ -33,7 +33,7 @@ const RememberCreate = () => {
     name: '',
     date: '',
     time: '',
-    repeat: '', // notRepeat - everyDay - (rangeDay) 2 - (specificDays) monday, wednesday, friday, sunday
+    repeat: '', // (notRepeat) | (everyDay) | (rangeDay) 2  | (specificDays) monday, wednesday, friday, sunday
     aquarium: '',
     category: '',
     quantity: '',
@@ -253,8 +253,6 @@ const RememberCreate = () => {
   async function saveRemember() {
     const realm = await getRealm();
 
-    console.log(JSON.stringify(data, null, 2));
-
     realm.write(() => {
       realm.create(
         'Remember',
@@ -304,6 +302,8 @@ const RememberCreate = () => {
   function onCloseCancelSpecificDayModal() {
     setAllCheckboxesDateFalse();
     setModalSpecificDayVisible(false);
+    setRadioButtonGroupValue('');
+    setData({ ...data, repeat: '' });
   }
   function onCloseSucessSpecificDayModal() {
     const trueSpecificDay = specificDay.filter(day => day.checked === true);
@@ -317,6 +317,8 @@ const RememberCreate = () => {
   function onCloseCancelRangeDaysModal() {
     setRangeDay(0);
     setModalRangeDaysVisible(false);
+    setRadioButtonGroupValue('');
+    setData({ ...data, repeat: '' });
   }
   function onCloseSucessRangeDaysModal() {
     data.repeat = rangeDay.toString();
@@ -347,7 +349,6 @@ const RememberCreate = () => {
 
   async function handleAddRemember() {
     const approved = validateInputsToSave();
-    console.log('approved:: ' + approved);
     if (!approved) {
       ToastAndroid.showWithGravityAndOffset(
         'Ops, ocorreu um erro!\nPor favor preencha todos os campos.',

@@ -1,20 +1,17 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 
-function inputText({
-  value,
-  placeholder,
-  returnKeyType,
-  onChangeText = () => {},
-  error,
-}) {
+function inputText(props, ref) {
   return (
     <TextInput
-      style={[styles.input, error && styles.inputError]}
-      placeholder={placeholder}
-      returnKeyType={returnKeyType}
-      value={value}
-      onChangeText={text => onChangeText(text)}
+      style={[styles.input, props.error && styles.inputError]}
+      placeholder={props.placeholder}
+      returnKeyType={props.returnKeyType}
+      value={props.value}
+      onChangeText={text => props.onChangeText(text)}
+      ref={ref}
+      onSubmitEditing={() => props.onSubmitEditing()}
+      {...props}
     />
   );
 }
@@ -34,4 +31,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default inputText;
+export default forwardRef(inputText);
