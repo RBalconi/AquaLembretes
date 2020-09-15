@@ -73,7 +73,8 @@ const RememberIndex = () => {
       .objects('Notification')
       .filtered(`idRemember = '${idRemember}'`);
 
-    for (let notification of notificationObj) {
+    let notification;
+    for (notification of notificationObj) {
       PushNotification.cancelLocalNotifications({
         id: notification.idNotification.toString(),
       });
@@ -138,6 +139,7 @@ const RememberIndex = () => {
 
   const startListenerRefreshRemember = useCallback(async () => {
     const realm = await getRealm();
+    realm.removeAllListeners();
     realm.addListener('change', () => setRememberRealm());
   }, []);
 
@@ -237,7 +239,6 @@ const styles = StyleSheet.create({
     color: '#334455',
     fontFamily: 'Roboto-Bold',
     fontSize: 20,
-    paddingBottom: 4,
   },
 
   dataCard: {

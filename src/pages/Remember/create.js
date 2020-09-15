@@ -406,6 +406,7 @@ const RememberCreate = () => {
           value={data.name}
           error={error.name}
           onChangeText={text => setData({ ...data, name: text })}
+          onSubmitEditing={() => {}}
         />
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <DateTimePicker

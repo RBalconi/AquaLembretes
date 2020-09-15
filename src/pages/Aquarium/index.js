@@ -93,6 +93,7 @@ const AquariumIndex = props => {
   }
   const startListenerRefreshAquarium = useCallback(async () => {
     const realm = await getRealm();
+    realm.removeAllListeners();
     realm.addListener('change', () => setAquariumsRealm());
   }, []);
 

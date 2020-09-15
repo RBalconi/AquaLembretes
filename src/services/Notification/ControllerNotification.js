@@ -1,20 +1,5 @@
 import getRealm from '../../services/realm';
 
-async function getNotificationByIdRemember(id) {
-  const realm = await getRealm();
-  let notificationObj = realm
-    .objects('Notification')
-    .filtered(`idRemember = '${id}'`);
-
-  let notifications = [];
-  for (let index = 0; index < notificationObj.length; index++) {
-    const element = notificationObj[index];
-    notifications.push(element);
-    // console.log(element);
-  }
-  return notifications;
-}
-
 async function saveNotification(idRemember, idNotification) {
   try {
     const realm = await getRealm();

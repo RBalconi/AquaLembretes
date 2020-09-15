@@ -1,6 +1,6 @@
 export default class RememberSchema {
   static schema = {
-    name: 'Remember', // Ship
+    name: 'Remember',
     primaryKey: 'id',
     properties: {
       id: { type: 'int', indexed: true },
@@ -8,8 +8,6 @@ export default class RememberSchema {
       date: 'date',
       time: 'date',
       repeat: 'string',
-      // aquarium: { type: 'list', objectType: 'Aquarium' },
-      // aquariumObj: 'Aquarium[]', // captain: Captain
       aquarium: 'string',
       category: 'string',
       quantity: 'float',
