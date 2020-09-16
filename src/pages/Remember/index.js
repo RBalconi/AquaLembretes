@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import PushNotification from 'react-native-push-notification';
 
@@ -143,12 +143,14 @@ const RememberIndex = () => {
     realm.addListener('change', () => setRememberRealm());
   }, []);
 
-  useEffect(() => {
-    startListenerRefreshRemember();
-    return () => {
-      removeListernerRefreshRemember();
-    };
-  }, [startListenerRefreshRemember]);
+  useFocusEffect(
+    useCallback(() => {
+      startListenerRefreshRemember();
+      return () => {
+        removeListernerRefreshRemember();
+      };
+    }, [startListenerRefreshRemember]),
+  );
 
   useEffect(() => {
     setRememberRealm();

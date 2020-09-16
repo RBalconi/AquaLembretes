@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
 import moment from 'moment';
 
@@ -108,16 +108,17 @@ const Home = () => {
 
   const startListenerRefreshNextRemember = useCallback(async () => {
     const realm = await getRealm();
-    realm.removeAllListeners();
     realm.addListener('change', () => loadNextRemember());
   }, [loadNextRemember]);
 
-  useEffect(() => {
-    startListenerRefreshNextRemember();
-    return () => {
-      removeListernerRefreshNextRemember();
-    };
-  }, [startListenerRefreshNextRemember]);
+  useFocusEffect(
+    useCallback(() => {
+      startListenerRefreshNextRemember();
+      return () => {
+        removeListernerRefreshNextRemember();
+      };
+    }, [startListenerRefreshNextRemember]),
+  );
 
   useEffect(() => {
     loadNextRemember();

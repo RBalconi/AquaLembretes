@@ -10,7 +10,7 @@ import {
   Text,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import getRealm from '../../services/realm';
 import RNFS from 'react-native-fs';
 
@@ -97,12 +97,14 @@ const AquariumIndex = props => {
     realm.addListener('change', () => setAquariumsRealm());
   }, []);
 
-  useEffect(() => {
-    startListenerRefreshAquarium();
-    return () => {
-      removeListenerRefreshAquarium();
-    };
-  }, [startListenerRefreshAquarium]);
+  useFocusEffect(
+    useCallback(() => {
+      startListenerRefreshAquarium();
+      return () => {
+        removeListenerRefreshAquarium();
+      };
+    }, [startListenerRefreshAquarium]),
+  );
 
   useEffect(() => {
     setAquariumsRealm();
