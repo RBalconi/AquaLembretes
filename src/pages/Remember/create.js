@@ -130,6 +130,8 @@ const RememberCreate = () => {
         return 'Suplementação';
       case 'tpa':
         return 'Limpeza';
+      case 'other':
+        return 'Atenção';
     }
   }
 
@@ -518,6 +520,7 @@ const RememberCreate = () => {
             { label: 'Medicação', value: 'medication' },
             { label: 'Suplementação', value: 'supplementation' },
             { label: 'Limpeza', value: 'tpa' },
+            { label: 'Outra', value: 'other' },
           ]}
           error={error.category}
         />

@@ -63,6 +63,8 @@ const RememberIndex = () => {
         return 'food-variant';
       case 'tpa':
         return 'water';
+      case 'other':
+        return 'puzzle';
     }
   }
 
@@ -160,15 +162,40 @@ const RememberIndex = () => {
     navigation.navigate('RememberCreate', { rememberId: 0 });
   }
 
+  function translateAbreviateWeekDay(day) {
+    switch (day) {
+      case 'sunday':
+        return 'Dom - ';
+      case 'monday':
+        return 'Seg - ';
+      case 'tuesday':
+        return 'Ter - ';
+      case 'wednesday':
+        return 'Qua - ';
+      case 'thursday':
+        return 'Qui - ';
+      case 'friday':
+        return 'Sex - ';
+      case 'saturday':
+        return 'Sab';
+    }
+  }
+
   function repeatDays(item) {
     if (item.repeat === 'notRepeat') {
-      return `${moment(item.time).format('HH:mm')} - Não repetir`;
+      return `${moment(item.time).format('HH:mm')} - ${moment(item.day).format(
+        'DD/MM/YY',
+      )}\nNão repetir`;
     } else if (item.repeat === 'everyDay') {
       return `${moment(item.time).format('HH:mm')} - Todo dia`;
     } else if (listWeekDay.some(day => item.repeat.includes(day))) {
-      return `${moment(item.time).format('HH:mm')} - Dias específicos`;
+      const weekDay = item.repeat.split(',');
+      const days = weekDay.map(day => translateAbreviateWeekDay(day));
+      return `${moment(item.time).format('HH:mm')} - ${days.join('')}`;
     } else {
-      return `${moment(item.time).format('HH:mm')} - Intervalo de dias`;
+      return `${moment(item.time).format('HH:mm')} - ${item.repeat} em ${
+        item.repeat
+      } dias`;
     }
   }
 
@@ -199,7 +226,9 @@ const RememberIndex = () => {
                       <Text style={styles.info}>
                         {item.quantity + ' ' + item.unity}.
                       </Text>
-                      <Text style={styles.info}>{repeatDays(item)}</Text>
+                      <Text style={[styles.info, styles.date]}>
+                        {repeatDays(item)}
+                      </Text>
                     </View>
                   </View>
                 </SwipeableList>
@@ -253,12 +282,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
 
   info: {
     color: '#3A4E5F',
     fontFamily: 'Roboto-Medium',
     fontSize: 14,
+  },
+
+  date: {
+    textAlign: 'right',
+    maxWidth: 150,
   },
 
   floattingButton: {

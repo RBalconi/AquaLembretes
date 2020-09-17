@@ -13,6 +13,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
 import moment from 'moment';
+import { AdMobInterstitial } from 'react-native-admob';
 
 import getRealm from '../../services/realm';
 
@@ -116,6 +117,7 @@ const Home = () => {
       startListenerRefreshNextRemember();
       return () => {
         removeListernerRefreshNextRemember();
+        // interstitialAd();
       };
     }, [startListenerRefreshNextRemember]),
   );
@@ -123,6 +125,29 @@ const Home = () => {
   useEffect(() => {
     loadNextRemember();
   }, [loadNextRemember]);
+  /**
+   * app
+   * ca-app-pub-9437877355858008~9886550618
+   */
+
+  /**
+   * Interstitial
+   * ca-app-pub-9437877355858008/1988056903
+   */
+
+  async function interstitialAd() {
+    // await AdMobInterstitial.setAdUnitID(
+    //   'ca-app-pub-9437877355858008/1988056903',
+    // );
+    await AdMobInterstitial.setAdUnitID(
+      'ca-app-pub-3940256099942544/1033173712',
+    );
+    await AdMobInterstitial.requestAd()
+      .then(() => AdMobInterstitial.showAd())
+      .catch(e => {
+        console.log(e);
+      });
+  }
 
   const loadNextRemember = useCallback(async () => {
     getScheduledNextNotification()
