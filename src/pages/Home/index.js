@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,7 +27,6 @@ const Home = () => {
     date: '',
     time: '',
   });
-  const [isLoading, setIsLoading] = useState(true);
 
   const listWeekDay = [
     'sunday',
@@ -41,49 +40,33 @@ const Home = () => {
 
   const getScheduledNextNotification = () =>
     new Promise((resolve, reject) => {
-      setIsLoading(true);
-      // PushNotification.getScheduledLocalNotifications(notificationsList => {
-      // console.log(notificationsList);
-      // });
       PushNotification.getScheduledLocalNotifications(notificationsList => {
         notificationsList
           .map(notification => notification)
           .sort((a, b) => a.date - b.date)
           .find(findValue => {
             if (moment(findValue.date).isSameOrAfter(moment(), 'minute')) {
-              setIsLoading(false);
               resolve(findValue);
             }
           });
         if (!notificationsList.length) {
-          setIsLoading(false);
           reject('Nothing found');
         }
       });
     });
 
-  //
-
   const getIdRememberByIdNotification = notification =>
     new Promise(async (resolve, reject) => {
-      setIsLoading(true);
-
       const realm = await getRealm();
       const idRemember = realm
         .objects('Notification')
         .filtered(`idNotification = '${notification.id}'`)
         .map(item => item.idRemember);
 
-      setIsLoading(false);
-
       resolve(idRemember);
     });
 
-  //
-
   async function getRememberDataById(rememberId) {
-    setIsLoading(true);
-
     const realm = await getRealm();
     const nextRememberObj = realm
       .objects('Remember')
@@ -98,7 +81,6 @@ const Home = () => {
         });
       });
 
-    setIsLoading(false);
     return nextRememberObj;
   }
 
@@ -114,39 +96,20 @@ const Home = () => {
 
   useFocusEffect(
     useCallback(() => {
+      loadNextRemember();
       startListenerRefreshNextRemember();
       return () => {
         removeListernerRefreshNextRemember();
-        // interstitialAd();
+        interstitialAd();
       };
-    }, [startListenerRefreshNextRemember]),
+    }, [loadNextRemember, startListenerRefreshNextRemember]),
   );
 
-  useEffect(() => {
-    loadNextRemember();
-  }, [loadNextRemember]);
-  /**
-   * app
-   * ca-app-pub-9437877355858008~9886550618
-   */
-
-  /**
-   * Interstitial
-   * ca-app-pub-9437877355858008/1988056903
-   */
-
   async function interstitialAd() {
-    // await AdMobInterstitial.setAdUnitID(
-    //   'ca-app-pub-9437877355858008/1988056903',
-    // );
-    await AdMobInterstitial.setAdUnitID(
-      'ca-app-pub-3940256099942544/1033173712',
-    );
-    await AdMobInterstitial.requestAd()
-      .then(() => AdMobInterstitial.showAd())
-      .catch(e => {
-        console.log(e);
-      });
+    await AdMobInterstitial.setAdUnitID('ADD/KEY/INTERSTITIAL/HERE');
+    await AdMobInterstitial.requestAd().then(() => {
+      AdMobInterstitial.showAd();
+    });
   }
 
   const loadNextRemember = useCallback(async () => {

@@ -2,12 +2,13 @@
   package="com.aquahelpcli">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission-sdk-23 android:name="android.permission.CAMERA"/>
-    <uses-permission-sdk-23 android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
+      android:requestLegacyExternalStorage="true"
       android:name=".MainApplication"
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
@@ -16,7 +17,8 @@
       android:theme="@style/AppTheme">
       
       
-      <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-9437877355858008~9886550618"/>
+      <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" 
+                 android:value="ADD~KEY~APPLICATION~HERE"/>
 
       <meta-data
         android:name="com.google.firebase.messaging.default_notification_icon"
