@@ -41,13 +41,13 @@ const RememberIndex = () => {
 
   let swipedCardRef = null;
 
-  const onOpen = ref => {
+  const onOpen = (ref) => {
     if (swipedCardRef) {
       swipedCardRef.current.close();
     }
     swipedCardRef = ref;
   };
-  const onClose = ref => {
+  const onClose = (ref) => {
     if (ref === swipedCardRef) {
       swipedCardRef = null;
     }
@@ -165,17 +165,17 @@ const RememberIndex = () => {
   function translateAbreviateWeekDay(day) {
     switch (day) {
       case 'sunday':
-        return 'Dom - ';
+        return 'Dom';
       case 'monday':
-        return 'Seg - ';
+        return 'Seg';
       case 'tuesday':
-        return 'Ter - ';
+        return 'Ter';
       case 'wednesday':
-        return 'Qua - ';
+        return 'Qua';
       case 'thursday':
-        return 'Qui - ';
+        return 'Qui';
       case 'friday':
-        return 'Sex - ';
+        return 'Sex';
       case 'saturday':
         return 'Sab';
     }
@@ -188,10 +188,10 @@ const RememberIndex = () => {
       )}\nNão repetir`;
     } else if (item.repeat === 'everyDay') {
       return `${moment(item.time).format('HH:mm')} - Todo dia`;
-    } else if (listWeekDay.some(day => item.repeat.includes(day))) {
+    } else if (listWeekDay.some((day) => item.repeat.includes(day))) {
       const weekDay = item.repeat.split(',');
-      const days = weekDay.map(day => translateAbreviateWeekDay(day));
-      return `${moment(item.time).format('HH:mm')} - ${days.join('')}`;
+      const days = weekDay.map((day) => translateAbreviateWeekDay(day));
+      return `${moment(item.time).format('HH:mm')} - ${days.join(' - ')}`;
     } else {
       return `${moment(item.time).format('HH:mm')} - ${item.repeat} em ${
         item.repeat
@@ -211,7 +211,7 @@ const RememberIndex = () => {
           ) : (
             <FlatList
               data={remember}
-              keyExtractor={item => String(item.id)}
+              keyExtractor={(item) => String(item.id)}
               renderItem={({ item }) => (
                 <SwipeableList
                   data={item}

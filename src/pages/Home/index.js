@@ -40,11 +40,11 @@ const Home = () => {
 
   const getScheduledNextNotification = () =>
     new Promise((resolve, reject) => {
-      PushNotification.getScheduledLocalNotifications(notificationsList => {
+      PushNotification.getScheduledLocalNotifications((notificationsList) => {
         notificationsList
-          .map(notification => notification)
+          .map((notification) => notification)
           .sort((a, b) => a.date - b.date)
-          .find(findValue => {
+          .find((findValue) => {
             if (moment(findValue.date).isSameOrAfter(moment(), 'minute')) {
               resolve(findValue);
             }
@@ -55,13 +55,13 @@ const Home = () => {
       });
     });
 
-  const getIdRememberByIdNotification = notification =>
+  const getIdRememberByIdNotification = (notification) =>
     new Promise(async (resolve, reject) => {
       const realm = await getRealm();
       const idRemember = realm
         .objects('Notification')
         .filtered(`idNotification = '${notification.id}'`)
-        .map(item => item.idRemember);
+        .map((item) => item.idRemember);
 
       resolve(idRemember);
     });
@@ -71,7 +71,7 @@ const Home = () => {
     const nextRememberObj = realm
       .objects('Remember')
       .filtered(`id = '${rememberId}'`)
-      .map(remember => {
+      .map((remember) => {
         return setNextRemember({
           name: remember.name,
           aquarium: remember.aquarium,
@@ -96,17 +96,18 @@ const Home = () => {
 
   useFocusEffect(
     useCallback(() => {
+      AdMobInterstitial.setAdUnitID('/');
+
       loadNextRemember();
       startListenerRefreshNextRemember();
       return () => {
         removeListernerRefreshNextRemember();
-        interstitialAd();
+        AdMobInterstitial.removeAllListeners();
       };
     }, [loadNextRemember, startListenerRefreshNextRemember]),
   );
 
   async function interstitialAd() {
-    await AdMobInterstitial.setAdUnitID('ADD/KEY/INTERSTITIAL/HERE');
     await AdMobInterstitial.requestAd().then(() => {
       AdMobInterstitial.showAd();
     });
@@ -114,12 +115,12 @@ const Home = () => {
 
   const loadNextRemember = useCallback(async () => {
     getScheduledNextNotification()
-      .then(nextNotification => {
-        getIdRememberByIdNotification(nextNotification).then(id =>
+      .then((nextNotification) => {
+        getIdRememberByIdNotification(nextNotification).then((id) =>
           getRememberDataById(id),
         );
       })
-      .catch(error => {
+      .catch((error) => {
         if (error === 'Nothing found') {
           setNextRemember({
             name: '',
@@ -137,7 +138,7 @@ const Home = () => {
       return 'Não repetir';
     } else if (item.repeat === 'everyDay') {
       return 'Todo dia';
-    } else if (listWeekDay.some(day => item.repeat.includes(day))) {
+    } else if (listWeekDay.some((day) => item.repeat.includes(day))) {
       return 'Dias específicos';
     } else {
       return 'Intervalo de dias';
@@ -146,10 +147,12 @@ const Home = () => {
 
   function handleNavigateToRemember() {
     navigation.navigate('Remember');
+    interstitialAd();
   }
 
   function handleNavigateToAquarium() {
     navigation.navigate('Aquarium');
+    interstitialAd();
   }
 
   return (
